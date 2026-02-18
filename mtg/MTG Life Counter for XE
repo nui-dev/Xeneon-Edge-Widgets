@@ -208,6 +208,7 @@
     .badge-commander { color: #ffcc80; }
     .badge-energy { color: #81d4fa; }
     .badge-partner { color: #fff2a8; }
+    .badge-options { color: #d2b8ff; }
 
     .swipe-hint {
       font-size: clamp(8px, calc(var(--label-font) * 0.75), 16px);
@@ -1047,6 +1048,10 @@
               <span>${p.experience}</span>
             </div>
             ${p.partners ? '<div class="badge badge-partner">' + getBadgeIconImg('partner', 'Partner') + '<span>Partner</span></div>' : ''}
+            <div class="badge badge-options" onclick="event.stopPropagation(); openPlayerActionsModal(${i})" title="Options">
+              <span class="badge-icon">&#8942;</span>
+              <span>Menu</span>
+            </div>
           </div>
         `;
 
@@ -1075,13 +1080,17 @@
             <div class="life-total" id="life-${i}" onclick="event.stopPropagation(); openLifeInputModal(${i})">${p.life}</div>
             ${lifeControlsHtml}
             ${state.viewMode === 'single' ? '' : badgesHtml}
-            ${state.viewMode === 'single' ? '' : '<div class="swipe-hint">Swipe L/R: Commander | Swipe U/D: Options</div>'}
+            ${state.viewMode === 'single' ? '' : '<div class="swipe-hint">Swipe L/R: Commander | Swipe U/D: Options | Tap Menu</div>'}
           </div>
           ${p.alive ? '' : '<div class="dead-overlay">KO</div>'}
         `;
         card.onpointerdown = (event) => onCardPointerDown(i, event);
         card.onpointerup = (event) => onCardPointerUp(i, event);
         card.onpointercancel = clearCardSwipe;
+        card.ontouchstart = (event) => onCardPointerDown(i, event);
+        card.ontouchend = (event) => onCardPointerUp(i, event);
+        card.onmousedown = (event) => onCardPointerDown(i, event);
+        card.onmouseup = (event) => onCardPointerUp(i, event);
         area.appendChild(card);
       });
     }
@@ -1116,18 +1125,36 @@
       });
     }
 
+    function getEventPoint(event) {
+      if (!event) return null;
+      if (typeof event.clientX === 'number' && typeof event.clientY === 'number') {
+        return { x: event.clientX, y: event.clientY };
+      }
+      if (event.changedTouches && event.changedTouches.length > 0) {
+        return { x: event.changedTouches[0].clientX, y: event.changedTouches[0].clientY };
+      }
+      if (event.touches && event.touches.length > 0) {
+        return { x: event.touches[0].clientX, y: event.touches[0].clientY };
+      }
+      return null;
+    }
+
     function onCardPointerDown(index, event) {
-      if (!event || typeof event.clientX !== 'number' || typeof event.clientY !== 'number') return;
+      if (event && typeof event.button === 'number' && event.button !== 0) return;
+      const point = getEventPoint(event);
+      if (!point) return;
       swipeState.active = true;
       swipeState.index = index;
-      swipeState.x = event.clientX;
-      swipeState.y = event.clientY;
+      swipeState.x = point.x;
+      swipeState.y = point.y;
     }
 
     function onCardPointerUp(index, event) {
       if (!swipeState.active || swipeState.index !== index || !event) return;
-      const dx = event.clientX - swipeState.x;
-      const dy = event.clientY - swipeState.y;
+      const point = getEventPoint(event);
+      if (!point) return;
+      const dx = point.x - swipeState.x;
+      const dy = point.y - swipeState.y;
       const absX = Math.abs(dx);
       const absY = Math.abs(dy);
       clearCardSwipe();
@@ -1636,6 +1663,9 @@
 
     document.addEventListener('pointerup', endLifeAdjust);
     document.addEventListener('pointercancel', endLifeAdjust);
+    document.addEventListener('mouseup', endLifeAdjust);
+    document.addEventListener('touchend', endLifeAdjust);
+    document.addEventListener('touchcancel', endLifeAdjust);
 
     // iCUE API binding
     if (typeof window !== 'undefined') {
