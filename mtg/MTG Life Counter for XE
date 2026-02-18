@@ -542,6 +542,9 @@
 
     .bg-modal-inner {
       width: min(92%, 480px);
+      max-height: 90vh;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
       background: rgba(30, 30, 50, 0.95);
       border: 1px solid rgba(255,255,255,0.15);
       border-radius: 16px;
@@ -562,6 +565,7 @@
     .bg-preview {
       width: 100%;
       aspect-ratio: 16/9;
+      max-height: 25vh;
       border-radius: 10px;
       border: 1px solid rgba(255,255,255,0.12);
       background-color: var(--bg-color);
@@ -726,6 +730,12 @@
       transition: border-color 0.15s, transform 0.1s;
       position: relative;
       overflow: hidden;
+    }
+
+    @media (max-height: 480px) {
+      .bg-preset-item { aspect-ratio: 2/1; }
+      .bg-preview { max-height: 18vh; }
+      .bg-modal-inner { padding: 16px; gap: 10px; }
     }
 
     .bg-preset-item:hover {
