@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>tr('MTG Life Counter')</title>
-  <link rel="icon" type="image/svg+xml" href="images/mtglifecounter.svg">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,%3Csvg%20xmlns='http%3A//www.w3.org/2000/svg'%20viewBox='0%200%2064%2064'%3E%3Ccircle%20cx='32'%20cy='32'%20r='30'%20fill='%231a1a2e'/%3E%3Ctext%20x='32'%20y='41'%20text-anchor='middle'%20font-size='30'%20fill='%23c8a2ff'%20font-family='Arial'%20font-weight='700'%3EM%3C/text%3E%3C/svg%3E">
 
   <meta name="x-icue-restrictions"
         data-restrictions='[
@@ -766,6 +766,13 @@
   <script>
     const EXTRA_COLORS = ['#b87924', '#c40016', '#2ed8ff', '#8bc34a', '#ff8a65', '#9c6dff'];
     const COUNTER_KEYS = ['poison', 'energy', 'commanderTax', 'storm', 'mana', 'experience'];
+    const BADGE_ICON_SVG = {
+      poison: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><circle cx="32" cy="32" r="29" fill="#77d46f" stroke="#113d18" stroke-width="3"/><circle cx="24" cy="28" r="6" fill="#0d2812"/><circle cx="40" cy="28" r="6" fill="#0d2812"/><rect x="24" y="38" width="16" height="4" rx="2" fill="#0d2812"/></svg>',
+      commander: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><circle cx="32" cy="32" r="29" fill="#ffd76a" stroke="#5a3b07" stroke-width="3"/><path d="M13 43l4-21 10 10 5-16 5 16 10-10 4 21H13z" fill="#5a3b07"/></svg>',
+      energy: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><circle cx="32" cy="32" r="29" fill="#82d7ff" stroke="#153770" stroke-width="3"/><path d="M35 10L18 35h11l-1 19 18-27H35V10z" fill="#0d1f4d"/></svg>',
+      experience: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><circle cx="32" cy="32" r="29" fill="#f1b3ff" stroke="#461f73" stroke-width="3"/><path d="M32 12l5 11 12 2-9 8 2 12-10-6-10 6 2-12-9-8 12-2 5-11z" fill="#36125f"/></svg>',
+      partner: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><circle cx="32" cy="32" r="29" fill="#f9e98b" stroke="#5a4b1a" stroke-width="3"/><circle cx="24" cy="24" r="7" fill="#4c3d10"/><circle cx="40" cy="24" r="7" fill="#4c3d10"/><path d="M15 46c1-6 5-10 9-10s8 4 9 10H15z" fill="#4c3d10"/><path d="M31 46c1-6 5-10 9-10s8 4 9 10H31z" fill="#4c3d10"/></svg>'
+    };
 
     // === STATE ===
     const state = {
@@ -871,6 +878,12 @@
     function formatHistoryTime(ts) {
       const elapsed = Math.max(0, ts - state.gameStartedAt - state.gamePausedMs);
       return formatTime(elapsed);
+    }
+
+    function getBadgeIconImg(iconKey, altText) {
+      const svg = BADGE_ICON_SVG[iconKey];
+      if (!svg) return '<span class="badge-icon">?</span>';
+      return '<img class="badge-icon-img" alt="' + altText + '" src="data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '">';
     }
 
     function logHistory(text) {
@@ -1017,23 +1030,23 @@
         const badgesHtml = `
           <div class="counter-badges">
             <div class="badge badge-poison" onclick="event.stopPropagation(); openCountersModal(${i})" title="Poison">
-              <img class="badge-icon-img" src="images/mtg_icon_poison.svg" alt="Poison">
+              ${getBadgeIconImg('poison', 'Poison')}
               <span>${p.poison}</span>
             </div>
             ${isCommander ? `
             <div class="badge badge-commander" onclick="event.stopPropagation(); openCommanderModal(${i})" title="Commander Damage">
-              <img class="badge-icon-img" src="images/mtg_icon_commander.svg" alt="Commander">
+              ${getBadgeIconImg('commander', 'Commander')}
               <span>${commanderTotal}</span>
             </div>` : ''}
             <div class="badge badge-energy" onclick="event.stopPropagation(); openCountersModal(${i})" title="Energy">
-              <img class="badge-icon-img" src="images/mtg_icon_energy.svg" alt="Energy">
+              ${getBadgeIconImg('energy', 'Energy')}
               <span>${p.energy}</span>
             </div>
             <div class="badge badge-exp" onclick="event.stopPropagation(); openCountersModal(${i})" title="Experience">
-              <img class="badge-icon-img" src="images/mtg_icon_experience.svg" alt="Experience">
+              ${getBadgeIconImg('experience', 'Experience')}
               <span>${p.experience}</span>
             </div>
-            ${p.partners ? '<div class="badge badge-partner"><img class="badge-icon-img" src="images/mtg_icon_partner.svg" alt="Partner"><span>Partner</span></div>' : ''}
+            ${p.partners ? '<div class="badge badge-partner">' + getBadgeIconImg('partner', 'Partner') + '<span>Partner</span></div>' : ''}
           </div>
         `;
 
