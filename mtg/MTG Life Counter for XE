@@ -73,7 +73,25 @@
       padding: 1.5% 1%;
       box-sizing: border-box;
       gap: 0.8%;
+      position: relative;
     }
+
+    .widget-root::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: var(--bg-image, none);
+      background-size: var(--bg-fit, cover);
+      background-position: center;
+      background-repeat: no-repeat;
+      z-index: 0;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .widget-root.has-bg-image::before { opacity: 1; }
+    .widget-root > * { position: relative; z-index: 1; }
 
     /* === PLAYER CARDS === */
     .players-area {
@@ -506,6 +524,133 @@
 
     .modal-close:hover { background: rgba(255,255,255,0.15); }
 
+    /* Background image modal */
+    .bg-modal {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.88);
+      z-index: 200;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      color: #ffffff;
+    }
+
+    .bg-modal.visible { display: flex; }
+
+    .bg-modal-inner {
+      width: min(92%, 480px);
+      background: rgba(30, 30, 50, 0.95);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 16px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      align-items: center;
+    }
+
+    .bg-modal-title {
+      font-size: clamp(14px, var(--secondary-font), 28px);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .bg-preview {
+      width: 100%;
+      aspect-ratio: 16/9;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background-color: var(--bg-color);
+      background-size: cover;
+      background-position: center;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      opacity: 0.6;
+    }
+
+    .bg-url-input {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.2);
+      background: rgba(255,255,255,0.08);
+      color: #ffffff;
+      font-size: 13px;
+      box-sizing: border-box;
+      outline: none;
+    }
+
+    .bg-url-input::placeholder { color: rgba(255,255,255,0.4); }
+    .bg-url-input:focus { border-color: var(--accent-color); }
+
+    .bg-btn-row {
+      display: flex;
+      gap: 8px;
+      width: 100%;
+    }
+
+    .bg-btn {
+      flex: 1;
+      padding: 10px 14px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.2);
+      background: rgba(255,255,255,0.1);
+      color: var(--text-color);
+      font-size: clamp(10px, calc(var(--label-font) * 0.9), 16px);
+      font-weight: 600;
+      cursor: pointer;
+      text-align: center;
+      transition: background 0.15s;
+    }
+
+    .bg-btn:hover { background: rgba(255,255,255,0.18); }
+    .bg-btn:active { background: rgba(255,255,255,0.25); }
+
+    .bg-btn-accent {
+      background: linear-gradient(180deg, #d6b3ff, var(--accent-color));
+      color: #1a1430;
+      border-color: rgba(255,255,255,0.35);
+    }
+
+    .bg-btn-danger {
+      color: #ff5f52;
+      border-color: rgba(255,113,97,0.5);
+      background: rgba(255,111,97,0.15);
+    }
+
+    .bg-file-input { display: none; }
+
+    .bg-fit-toggle {
+      display: flex;
+      gap: 6px;
+      width: 100%;
+    }
+
+    .bg-fit-btn {
+      flex: 1;
+      padding: 6px;
+      border-radius: 6px;
+      border: 1px solid rgba(255,255,255,0.15);
+      background: rgba(255,255,255,0.06);
+      color: var(--text-color);
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: center;
+      text-transform: uppercase;
+    }
+
+    .bg-fit-btn.active {
+      background: rgba(200,162,255,0.25);
+      border-color: var(--accent-color);
+    }
+
     .history-list {
       width: min(94%, 760px);
       max-height: 58vh;
@@ -752,6 +897,11 @@
       </div>
 
       <div class="tool-section" style="flex:0; padding:4% 8%;">
+        <div class="tool-label">Background</div>
+        <div class="tool-btn block" onclick="openBgModal()">Set Image</div>
+      </div>
+
+      <div class="tool-section" style="flex:0; padding:4% 8%;">
         <div class="reset-btn" onclick="confirmReset()">Reset Game</div>
       </div>
     </div>
@@ -762,6 +912,32 @@
     <div class="modal-title" id="modalTitle"></div>
     <div class="modal-content-wrap" id="modalContent"></div>
     <div class="modal-close" onclick="closeModal()">Close</div>
+  </div>
+
+  <!-- Background Image Modal -->
+  <div class="bg-modal" id="bgModal" onclick="if(event.target===this)closeBgModal()">
+    <div class="bg-modal-inner">
+      <div class="bg-modal-title">Background Image</div>
+      <div class="bg-preview" id="bgPreview">No image set</div>
+      <input type="text" class="bg-url-input" id="bgUrlInput"
+             placeholder="Paste image URL here..."
+             onkeydown="if(event.key==='Enter')loadBgFromUrl()">
+      <input type="file" class="bg-file-input" id="bgFileInput"
+             accept="image/*" onchange="loadBgFromFile(event)">
+      <div class="bg-btn-row">
+        <div class="bg-btn" onclick="document.getElementById('bgFileInput').click()">Upload File</div>
+        <div class="bg-btn bg-btn-accent" onclick="loadBgFromUrl()">Load URL</div>
+      </div>
+      <div class="bg-fit-toggle">
+        <div class="bg-fit-btn active" id="bgFitCover" onclick="setBgFit('cover')">Cover</div>
+        <div class="bg-fit-btn" id="bgFitContain" onclick="setBgFit('contain')">Contain</div>
+        <div class="bg-fit-btn" id="bgFitFill" onclick="setBgFit('fill')">Fill</div>
+      </div>
+      <div class="bg-btn-row">
+        <div class="bg-btn bg-btn-danger" onclick="clearBgImage()">Remove Image</div>
+        <div class="bg-btn" onclick="closeBgModal()">Close</div>
+      </div>
+    </div>
   </div>
 
   <script>
@@ -1613,6 +1789,159 @@
       document.getElementById('coinResult').style.color = '';
     }
 
+    // === BACKGROUND IMAGE ===
+    const BG_STORAGE_KEY = 'mtg_widget_bg_image';
+    const BG_FIT_STORAGE_KEY = 'mtg_widget_bg_fit';
+
+    function loadSavedBgImage() {
+      try {
+        const saved = localStorage.getItem(BG_STORAGE_KEY);
+        const fit = localStorage.getItem(BG_FIT_STORAGE_KEY) || 'cover';
+        if (saved) applyBgImage(saved, fit);
+      } catch (e) {}
+    }
+
+    function applyBgImage(dataUrl, fit) {
+      const root = document.getElementById('widgetRoot');
+      if (!dataUrl) {
+        root.classList.remove('has-bg-image');
+        root.style.removeProperty('--bg-image');
+        root.style.removeProperty('--bg-fit');
+        return;
+      }
+      root.style.setProperty('--bg-image', 'url("' + dataUrl + '")');
+      const cssSize = fit === 'fill' ? '100% 100%' : (fit || 'cover');
+      root.style.setProperty('--bg-fit', cssSize);
+      root.classList.add('has-bg-image');
+    }
+
+    function saveBgImage(dataUrl, fit) {
+      try {
+        if (dataUrl) {
+          localStorage.setItem(BG_STORAGE_KEY, dataUrl);
+          localStorage.setItem(BG_FIT_STORAGE_KEY, fit || 'cover');
+        } else {
+          localStorage.removeItem(BG_STORAGE_KEY);
+          localStorage.removeItem(BG_FIT_STORAGE_KEY);
+        }
+      } catch (e) {}
+    }
+
+    function openBgModal() {
+      document.getElementById('bgModal').classList.add('visible');
+      updateBgPreview();
+      updateBgFitButtons();
+    }
+
+    function closeBgModal() {
+      document.getElementById('bgModal').classList.remove('visible');
+    }
+
+    function updateBgPreview() {
+      const preview = document.getElementById('bgPreview');
+      const root = document.getElementById('widgetRoot');
+      if (root.classList.contains('has-bg-image')) {
+        preview.style.backgroundImage = root.style.getPropertyValue('--bg-image');
+        const fit = root.style.getPropertyValue('--bg-fit') || 'cover';
+        preview.style.backgroundSize = fit;
+        preview.textContent = '';
+      } else {
+        preview.style.backgroundImage = 'none';
+        preview.textContent = 'No image set';
+      }
+    }
+
+    function updateBgFitButtons() {
+      const raw = (document.getElementById('widgetRoot')
+        .style.getPropertyValue('--bg-fit') || 'cover').trim();
+      const fit = raw === '100% 100%' ? 'fill' : raw;
+      document.getElementById('bgFitCover').classList.toggle('active', fit === 'cover');
+      document.getElementById('bgFitContain').classList.toggle('active', fit === 'contain');
+      document.getElementById('bgFitFill').classList.toggle('active', fit === 'fill');
+    }
+
+    function setBgFit(fit) {
+      const root = document.getElementById('widgetRoot');
+      const cssSize = fit === 'fill' ? '100% 100%' : fit;
+      root.style.setProperty('--bg-fit', cssSize);
+      try { localStorage.setItem(BG_FIT_STORAGE_KEY, fit); } catch (e) {}
+      updateBgPreview();
+      updateBgFitButtons();
+    }
+
+    function loadBgFromFile(event) {
+      const file = event.target.files && event.target.files[0];
+      if (!file || !file.type.startsWith('image/')) return;
+      if (file.size > 5 * 1024 * 1024) {
+        alert('Image too large (max 5MB). Try a smaller image or use a URL.');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const dataUrl = e.target.result;
+        const fit = getCurrentBgFit();
+        applyBgImage(dataUrl, fit);
+        saveBgImage(dataUrl, fit);
+        updateBgPreview();
+      };
+      reader.readAsDataURL(file);
+      event.target.value = '';
+    }
+
+    function loadBgFromUrl() {
+      const input = document.getElementById('bgUrlInput');
+      const url = (input.value || '').trim();
+      if (!url) return;
+      if (!url.startsWith('http://') && !url.startsWith('https://') && !url.startsWith('data:')) {
+        alert('Please enter a valid URL starting with http:// or https://');
+        return;
+      }
+      if (url.startsWith('data:image/')) {
+        const fit = getCurrentBgFit();
+        applyBgImage(url, fit);
+        saveBgImage(url, fit);
+        updateBgPreview();
+        input.value = '';
+        return;
+      }
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = function() {
+        const fit = getCurrentBgFit();
+        try {
+          const canvas = document.createElement('canvas');
+          canvas.width = img.naturalWidth;
+          canvas.height = img.naturalHeight;
+          canvas.getContext('2d').drawImage(img, 0, 0);
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+          applyBgImage(dataUrl, fit);
+          saveBgImage(dataUrl, fit);
+        } catch (e) {
+          applyBgImage(url, fit);
+          saveBgImage(url, fit);
+        }
+        updateBgPreview();
+        input.value = '';
+      };
+      img.onerror = function() {
+        alert('Could not load image from URL. Check the URL and try again.');
+      };
+      img.src = url;
+    }
+
+    function clearBgImage() {
+      applyBgImage(null);
+      saveBgImage(null);
+      updateBgPreview();
+      document.getElementById('bgUrlInput').value = '';
+    }
+
+    function getCurrentBgFit() {
+      const raw = (document.getElementById('widgetRoot')
+        .style.getPropertyValue('--bg-fit') || 'cover').trim();
+      return raw === '100% 100%' ? 'fill' : raw;
+    }
+
     // === iCUE INTEGRATION ===
     function applyStyles() {
       const root = document.documentElement;
@@ -1637,6 +1966,7 @@
       applyStyles();
       initGame();
       showState('content');
+      loadSavedBgImage();
     }
 
     // Track previous settings to detect changes
@@ -1659,6 +1989,7 @@
 
     function onIcueInitialized() {
       onIcueDataUpdated();
+      loadSavedBgImage();
     }
 
     document.addEventListener('pointerup', endLifeAdjust);
