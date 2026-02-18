@@ -87,10 +87,11 @@
       z-index: 0;
       pointer-events: none;
       opacity: 0;
-      transition: opacity 0.3s;
+      filter: blur(var(--bg-blur, 0px));
+      transition: opacity 0.3s, filter 0.3s;
     }
 
-    .widget-root.has-bg-image::before { opacity: 1; }
+    .widget-root.has-bg-image::before { opacity: var(--bg-opacity, 1); }
     .widget-root > * { position: relative; z-index: 1; }
 
     /* === PLAYER CARDS === */
@@ -651,6 +652,107 @@
       border-color: var(--accent-color);
     }
 
+    .bg-slider-row {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .bg-slider-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      opacity: 0.7;
+    }
+
+    .bg-slider {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 6px;
+      border-radius: 3px;
+      background: rgba(255,255,255,0.15);
+      outline: none;
+    }
+
+    .bg-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--accent-color);
+      cursor: pointer;
+      border: 2px solid rgba(255,255,255,0.4);
+    }
+
+    .bg-slider::-moz-range-thumb {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--accent-color);
+      cursor: pointer;
+      border: 2px solid rgba(255,255,255,0.4);
+    }
+
+    .bg-preset-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      opacity: 0.7;
+      width: 100%;
+      text-align: left;
+    }
+
+    .bg-preset-grid {
+      width: 100%;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .bg-preset-item {
+      aspect-ratio: 16/10;
+      border-radius: 8px;
+      background-size: cover;
+      background-position: center;
+      border: 2px solid rgba(255,255,255,0.12);
+      cursor: pointer;
+      transition: border-color 0.15s, transform 0.1s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .bg-preset-item:hover {
+      border-color: rgba(255,255,255,0.4);
+      transform: scale(1.04);
+    }
+
+    .bg-preset-item:active { transform: scale(0.96); }
+
+    .bg-preset-item.active {
+      border-color: var(--accent-color);
+      box-shadow: 0 0 8px rgba(200,162,255,0.4);
+    }
+
+    .bg-preset-name {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      padding: 3px 6px;
+      background: rgba(0,0,0,0.6);
+      font-size: 9px;
+      font-weight: 600;
+      text-align: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
     .history-list {
       width: min(94%, 760px);
       max-height: 58vh;
@@ -919,6 +1021,8 @@
     <div class="bg-modal-inner">
       <div class="bg-modal-title">Background Image</div>
       <div class="bg-preview" id="bgPreview">No image set</div>
+      <div class="bg-preset-label">Presets</div>
+      <div class="bg-preset-grid" id="bgPresetGrid"></div>
       <input type="text" class="bg-url-input" id="bgUrlInput"
              placeholder="Paste image URL here..."
              onkeydown="if(event.key==='Enter')loadBgFromUrl()">
@@ -932,6 +1036,14 @@
         <div class="bg-fit-btn active" id="bgFitCover" onclick="setBgFit('cover')">Cover</div>
         <div class="bg-fit-btn" id="bgFitContain" onclick="setBgFit('contain')">Contain</div>
         <div class="bg-fit-btn" id="bgFitFill" onclick="setBgFit('fill')">Fill</div>
+      </div>
+      <div class="bg-slider-row">
+        <div class="bg-slider-label"><span>Dim</span><span id="bgOpacityVal">100%</span></div>
+        <input type="range" class="bg-slider" id="bgOpacitySlider" min="5" max="100" value="100" oninput="setBgOpacity(this.value)">
+      </div>
+      <div class="bg-slider-row">
+        <div class="bg-slider-label"><span>Blur</span><span id="bgBlurVal">0px</span></div>
+        <input type="range" class="bg-slider" id="bgBlurSlider" min="0" max="20" value="0" oninput="setBgBlur(this.value)">
       </div>
       <div class="bg-btn-row">
         <div class="bg-btn bg-btn-danger" onclick="clearBgImage()">Remove Image</div>
@@ -1792,12 +1904,42 @@
     // === BACKGROUND IMAGE ===
     const BG_STORAGE_KEY = 'mtg_widget_bg_image';
     const BG_FIT_STORAGE_KEY = 'mtg_widget_bg_fit';
+    const BG_OPACITY_STORAGE_KEY = 'mtg_widget_bg_opacity';
+    const BG_BLUR_STORAGE_KEY = 'mtg_widget_bg_blur';
+
+    const BG_PRESETS = [
+      { name: 'Swamp', colors: ['#1a0a2e','#0d0d0d','#2d1b4e'], angle: 160 },
+      { name: 'Forest', colors: ['#0a2e1a','#1b3a2a','#0d1f12'], angle: 170 },
+      { name: 'Island', colors: ['#0a1a3e','#102844','#0b1929'], angle: 150 },
+      { name: 'Mountain', colors: ['#3e1a0a','#4a2010','#2e1008'], angle: 165 },
+      { name: 'Plains', colors: ['#3e3520','#4a4030','#2e2a18'], angle: 155 },
+      { name: 'Neon', colors: ['#0f0030','#1a004a','#30005a','#0a0020'], angle: 135 },
+      { name: 'Volcanic', colors: ['#1a0000','#3d0a00','#5a1500','#1a0000'], angle: 180 },
+      { name: 'Tundra', colors: ['#1a2a3e','#2a3a50','#0e1e2e'], angle: 170 },
+      { name: 'Void', colors: ['#000000','#0a0015','#000000'], angle: 180 }
+    ];
 
     function loadSavedBgImage() {
       try {
         const saved = localStorage.getItem(BG_STORAGE_KEY);
         const fit = localStorage.getItem(BG_FIT_STORAGE_KEY) || 'cover';
-        if (saved) applyBgImage(saved, fit);
+        const opacity = localStorage.getItem(BG_OPACITY_STORAGE_KEY);
+        const blur = localStorage.getItem(BG_BLUR_STORAGE_KEY);
+        if (saved) {
+          if (saved.startsWith('preset-gradient-')) {
+            const idx = parseInt(saved.replace('preset-gradient-', ''), 10);
+            if (BG_PRESETS[idx]) {
+              const root = document.getElementById('widgetRoot');
+              root.style.setProperty('--bg-image', getPresetGradient(BG_PRESETS[idx]));
+              root.style.setProperty('--bg-fit', 'cover');
+              root.classList.add('has-bg-image');
+            }
+          } else {
+            applyBgImage(saved, fit);
+          }
+        }
+        if (opacity !== null) applyBgOpacity(opacity);
+        if (blur !== null) applyBgBlur(blur);
       } catch (e) {}
     }
 
@@ -1831,6 +1973,8 @@
       document.getElementById('bgModal').classList.add('visible');
       updateBgPreview();
       updateBgFitButtons();
+      syncBgSliders();
+      renderBgPresets();
     }
 
     function closeBgModal() {
@@ -1841,12 +1985,19 @@
       const preview = document.getElementById('bgPreview');
       const root = document.getElementById('widgetRoot');
       if (root.classList.contains('has-bg-image')) {
-        preview.style.backgroundImage = root.style.getPropertyValue('--bg-image');
+        const bgVal = root.style.getPropertyValue('--bg-image') || '';
+        preview.style.backgroundImage = bgVal;
         const fit = root.style.getPropertyValue('--bg-fit') || 'cover';
-        preview.style.backgroundSize = fit;
+        preview.style.backgroundSize = bgVal.startsWith('linear-gradient') ? 'auto' : fit;
+        const rawOpacity = root.style.getPropertyValue('--bg-opacity');
+        preview.style.opacity = rawOpacity || 1;
+        const rawBlur = root.style.getPropertyValue('--bg-blur');
+        preview.style.filter = rawBlur && rawBlur !== '0px' ? 'blur(' + rawBlur + ')' : 'none';
         preview.textContent = '';
       } else {
         preview.style.backgroundImage = 'none';
+        preview.style.opacity = 0.6;
+        preview.style.filter = 'none';
         preview.textContent = 'No image set';
       }
     }
@@ -1932,8 +2083,87 @@
     function clearBgImage() {
       applyBgImage(null);
       saveBgImage(null);
+      applyBgOpacity(100);
+      applyBgBlur(0);
+      try {
+        localStorage.removeItem(BG_OPACITY_STORAGE_KEY);
+        localStorage.removeItem(BG_BLUR_STORAGE_KEY);
+      } catch (e) {}
       updateBgPreview();
+      syncBgSliders();
       document.getElementById('bgUrlInput').value = '';
+    }
+
+    function applyBgOpacity(value) {
+      document.getElementById('widgetRoot')
+        .style.setProperty('--bg-opacity', Number(value) / 100);
+    }
+
+    function applyBgBlur(value) {
+      document.getElementById('widgetRoot')
+        .style.setProperty('--bg-blur', value + 'px');
+    }
+
+    function setBgOpacity(value) {
+      applyBgOpacity(value);
+      document.getElementById('bgOpacityVal').textContent = value + '%';
+      try { localStorage.setItem(BG_OPACITY_STORAGE_KEY, value); } catch (e) {}
+    }
+
+    function setBgBlur(value) {
+      applyBgBlur(value);
+      document.getElementById('bgBlurVal').textContent = value + 'px';
+      try { localStorage.setItem(BG_BLUR_STORAGE_KEY, value); } catch (e) {}
+    }
+
+    function syncBgSliders() {
+      const root = document.getElementById('widgetRoot');
+      const rawOpacity = root.style.getPropertyValue('--bg-opacity');
+      const opacityPct = rawOpacity ? Math.round(Number(rawOpacity) * 100) : 100;
+      const rawBlur = root.style.getPropertyValue('--bg-blur');
+      const blurVal = rawBlur ? parseInt(rawBlur, 10) || 0 : 0;
+      document.getElementById('bgOpacitySlider').value = opacityPct;
+      document.getElementById('bgOpacityVal').textContent = opacityPct + '%';
+      document.getElementById('bgBlurSlider').value = blurVal;
+      document.getElementById('bgBlurVal').textContent = blurVal + 'px';
+    }
+
+    function getPresetGradient(preset) {
+      return 'linear-gradient(' + preset.angle + 'deg, ' + preset.colors.join(', ') + ')';
+    }
+
+    function renderBgPresets() {
+      const grid = document.getElementById('bgPresetGrid');
+      const currentBg = document.getElementById('widgetRoot').style.getPropertyValue('--bg-image') || '';
+      grid.innerHTML = '';
+      BG_PRESETS.forEach(function(preset, idx) {
+        const gradient = getPresetGradient(preset);
+        const isActive = currentBg.indexOf('preset-gradient-' + idx) !== -1;
+        const item = document.createElement('div');
+        item.className = 'bg-preset-item' + (isActive ? ' active' : '');
+        item.style.background = gradient;
+        item.innerHTML = '<div class="bg-preset-name">' + preset.name + '</div>';
+        item.onclick = function() { applyPresetBg(idx); };
+        grid.appendChild(item);
+      });
+    }
+
+    function applyPresetBg(idx) {
+      const preset = BG_PRESETS[idx];
+      if (!preset) return;
+      const gradient = getPresetGradient(preset);
+      const root = document.getElementById('widgetRoot');
+      const tag = 'preset-gradient-' + idx;
+      root.style.setProperty('--bg-image', gradient);
+      root.style.setProperty('--bg-fit', 'cover');
+      root.classList.add('has-bg-image');
+      try {
+        localStorage.setItem(BG_STORAGE_KEY, tag);
+        localStorage.setItem(BG_FIT_STORAGE_KEY, 'cover');
+      } catch (e) {}
+      updateBgPreview();
+      updateBgFitButtons();
+      renderBgPresets();
     }
 
     function getCurrentBgFit() {
