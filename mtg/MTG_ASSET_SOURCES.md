@@ -2,13 +2,14 @@
 
 ## MTG-specific symbols
 
-- Local icon pack added in this repo (`images/`):
+- Local icon pack added in this repo (`mtg/images/`):
   - `mtg_icon_poison.svg`
   - `mtg_icon_commander.svg`
   - `mtg_icon_energy.svg`
   - `mtg_icon_experience.svg`
   - `mtg_icon_partner.svg`
   - `mtg_mana_w.svg`, `mtg_mana_u.svg`, `mtg_mana_b.svg`, `mtg_mana_r.svg`, `mtg_mana_g.svg`
+  - Runtime note: the MTG widget now embeds badge icons as inline data-URI SVGs so it works in XE iframe code mode without external files.
 
 - Mana symbols (font + SVG source): `https://mana.andrewgioia.com/`
   - Notes: Great for `{W}{U}{B}{R}{G}`, tap, energy, etc.
