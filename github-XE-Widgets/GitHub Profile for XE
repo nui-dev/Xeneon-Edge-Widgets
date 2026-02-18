@@ -1,0 +1,1055 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tr('GitHub Profile')</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2016%2016'%20fill='%23e6edf3'%3E%3Cpath%20d='M8%200C3.58%200%200%203.58%200%208c0%203.54%202.29%206.53%205.47%207.59.4.07.55-.17.55-.38%200-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01%201.08.58%201.23.82.72%201.21%201.87.87%202.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95%200-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12%200%200%20.67-.21%202.2.82.64-.18%201.32-.27%202-.27.68%200%201.36.09%202%20.27%201.53-1.04%202.2-.82%202.2-.82.44%201.1.16%201.92.08%202.12.51.56.82%201.27.82%202.15%200%203.07-1.87%203.75-3.65%203.95.29.25.54.73.54%201.48%200%201.07-.01%201.93-.01%202.2%200%20.21.15.46.55.38A8.013%208.013%200%200%200%2016%208c0-4.42-3.58-8-8-8z'/%3E%3C/svg%3E">
+
+  <meta name="x-icue-restrictions" data-restrictions='[{"device":"dashboard_lcd"}]'>
+  <meta name="x-icue-interactive">
+
+  <!-- GitHub Profile Settings -->
+  <meta name="x-icue-property" content="refreshInterval" data-label="tr('Refresh (min)')" data-type="slider" data-default="5" data-min="1" data-max="30" data-step="1">
+  <meta name="x-icue-property" content="graphRange" data-label="tr('Graph Range')" data-type="tab-buttons" data-values="['1 Year','6 Months','3 Months']" data-default="'1 Year'">
+
+  <!-- Widget Personalization -->
+  <meta name="x-icue-property" content="textColor" data-label="tr('Text Color')" data-type="color" data-default="'#e6edf3'">
+  <meta name="x-icue-property" content="accentColor" data-label="tr('Accent Color')" data-type="color" data-default="'#58a6ff'">
+  <meta name="x-icue-property" content="backgroundColor" data-label="tr('Background')" data-type="color" data-default="'#0d1117'">
+  <meta name="x-icue-property" content="transparency" data-label="tr('Transparency')" data-type="slider" data-default="100" data-min="0" data-max="100" data-step="1">
+
+  <script id="x-icue-groups" type="application/json">
+  [
+    { "title": "tr('GitHub Profile')", "properties": ["refreshInterval", "graphRange"] },
+    { "title": "tr('Widget Personalization')", "properties": ["textColor", "accentColor", "backgroundColor", "transparency"] }
+  ]
+  </script>
+
+  <style>
+    :root {
+      --bg-color: #0d1117;
+      --surface-color: #161b22;
+      --border-color: #30363d;
+      --text-primary: #e6edf3;
+      --text-secondary: #7d8590;
+      --accent-color: #58a6ff;
+      --green: #3fb950;
+      --red: #f85149;
+      --yellow: #d29922;
+      --purple: #bc8cff;
+      --transparency: 1;
+      --contrib-empty: #161b22;
+      --contrib-l1: #0e4429;
+      --contrib-l2: #006d32;
+      --contrib-l3: #26a641;
+      --contrib-l4: #39d353;
+    }
+
+    html { overflow: hidden; }
+
+    body {
+      margin: 0; padding: 0;
+      width: 100vw; height: 100vh;
+      display: flex; align-items: center; justify-content: center;
+      background: var(--bg-color);
+      color: var(--text-primary);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+      font-size: 14px;
+      opacity: var(--transparency);
+      overflow: hidden;
+      -webkit-user-select: none; user-select: none;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+
+    /* Loading State */
+    .loading-state {
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 16px; height: 100vh; width: 100vw;
+    }
+    .spinner {
+      width: 32px; height: 32px;
+      border: 3px solid var(--border-color);
+      border-top-color: var(--accent-color);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-state span { color: var(--text-secondary); font-size: 13px; }
+
+    /* Setup State */
+    .setup-state {
+      display: none; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 16px; height: 100vh; width: 100vw;
+      padding: 24px;
+    }
+    .setup-icon {
+      width: 48px; height: 48px;
+      opacity: 0.7;
+    }
+    .setup-title {
+      font-size: 18px; font-weight: 600;
+      color: var(--text-primary);
+    }
+    .setup-hint {
+      font-size: 12px; color: var(--text-secondary);
+      text-align: center; max-width: 320px; line-height: 1.5;
+    }
+    .pat-input {
+      width: 100%; max-width: 340px;
+      padding: 10px 12px;
+      background: var(--surface-color);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      color: var(--text-primary);
+      font-size: 14px; font-family: monospace;
+      outline: none;
+    }
+    .pat-input:focus { border-color: var(--accent-color); }
+    .pat-input::placeholder { color: var(--text-secondary); }
+    .setup-btn {
+      padding: 8px 24px;
+      background: var(--green);
+      color: #ffffff; font-weight: 600; font-size: 14px;
+      border: none; border-radius: 6px;
+      cursor: pointer;
+    }
+    .setup-btn:hover { opacity: 0.9; }
+    .setup-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .setup-error {
+      color: var(--red); font-size: 13px;
+      display: none; text-align: center;
+    }
+
+    /* Error State */
+    .error-state {
+      display: none; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 12px; height: 100vh; width: 100vw;
+      padding: 24px;
+    }
+    .error-msg {
+      color: var(--text-secondary); font-size: 14px;
+      text-align: center; max-width: 300px;
+    }
+    .error-btn {
+      padding: 6px 16px;
+      background: var(--surface-color);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      color: var(--text-primary); font-size: 13px;
+      cursor: pointer;
+    }
+    .error-btn:hover { border-color: var(--accent-color); }
+
+    /* Content Area */
+    .content-area {
+      display: none; flex-direction: column;
+      width: 100vw; height: 100vh;
+      overflow: hidden;
+    }
+
+    /* Settings button */
+    .settings-btn {
+      display: none;
+      position: fixed; top: 8px; right: 8px;
+      width: 28px; height: 28px;
+      background: var(--surface-color);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      cursor: pointer; z-index: 50;
+      align-items: center; justify-content: center;
+    }
+    .settings-btn:hover { border-color: var(--accent-color); }
+    .settings-btn svg { width: 16px; height: 16px; fill: var(--text-secondary); }
+
+    /* Settings Modal */
+    .settings-modal {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.7);
+      z-index: 100;
+      align-items: center; justify-content: center;
+    }
+    .settings-modal.visible { display: flex; }
+    .settings-panel {
+      background: var(--surface-color);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 20px; width: 90%; max-width: 360px;
+    }
+    .settings-panel h3 {
+      margin: 0 0 16px; font-size: 15px; font-weight: 600;
+    }
+    .settings-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 8px 0; font-size: 13px;
+    }
+    .settings-row label { color: var(--text-secondary); }
+    .settings-row span { color: var(--text-primary); }
+    .settings-danger {
+      margin-top: 16px; padding-top: 16px;
+      border-top: 1px solid var(--border-color);
+    }
+    .disconnect-btn {
+      padding: 6px 14px;
+      background: transparent;
+      border: 1px solid var(--red);
+      border-radius: 6px;
+      color: var(--red); font-size: 13px;
+      cursor: pointer;
+    }
+    .disconnect-btn:hover { background: rgba(248,81,73,0.1); }
+    .settings-close {
+      margin-top: 16px; text-align: center;
+    }
+    .settings-close-btn {
+      padding: 6px 20px;
+      background: var(--border-color);
+      border: none; border-radius: 6px;
+      color: var(--text-primary); font-size: 13px;
+      cursor: pointer;
+    }
+
+    /* Header Bar */
+    .header-bar {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 14px; flex-shrink: 0;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .avatar {
+      width: 32px; height: 32px; border-radius: 50%;
+      border: 1px solid var(--border-color);
+    }
+    .avatar-fallback {
+      display: none; width: 32px; height: 32px; border-radius: 50%;
+      background: var(--border-color);
+      align-items: center; justify-content: center;
+      font-size: 14px; font-weight: 600; color: var(--text-primary);
+    }
+    .header-info { flex: 1; min-width: 0; }
+    .header-name {
+      font-size: 14px; font-weight: 600;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .header-login {
+      font-size: 12px; color: var(--text-secondary);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+
+    /* Stats Grid */
+    .stats-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 1px; background: var(--border-color);
+      flex-shrink: 0;
+    }
+    .stat-card {
+      background: var(--surface-color);
+      padding: 8px 10px;
+      text-align: center;
+    }
+    .stat-value {
+      font-size: 16px; font-weight: 700;
+      color: var(--text-primary);
+    }
+    .stat-label {
+      font-size: 10px; color: var(--text-secondary);
+      margin-top: 2px; text-transform: uppercase; letter-spacing: 0.5px;
+    }
+
+    /* Contribution Graph */
+    .contrib-section {
+      flex-shrink: 0; padding: 10px 14px;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .contrib-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    .contrib-title {
+      font-size: 12px; color: var(--text-secondary);
+    }
+    .contrib-total {
+      font-size: 12px; color: var(--text-secondary);
+    }
+    .contrib-total strong { color: var(--text-primary); font-weight: 600; }
+    .contrib-graph-wrap {
+      overflow-x: auto; overflow-y: hidden;
+      padding-bottom: 4px;
+    }
+    .contrib-graph {
+      display: grid;
+      grid-template-rows: repeat(7, 1fr);
+      grid-auto-flow: column;
+      grid-auto-columns: 1fr;
+      gap: 2px;
+      min-width: fit-content;
+    }
+    .contrib-cell {
+      width: 10px; height: 10px;
+      border-radius: 2px;
+      background: var(--contrib-empty);
+    }
+    .contrib-months {
+      display: flex; gap: 0; margin-bottom: 4px;
+      font-size: 9px; color: var(--text-secondary);
+    }
+    .contrib-month { text-align: left; }
+    .contrib-streak {
+      margin-top: 6px; font-size: 11px; color: var(--text-secondary);
+    }
+    .contrib-streak strong { color: var(--text-primary); }
+
+    /* Activity Feed */
+    .activity-section {
+      flex: 1; overflow-y: auto;
+      padding: 0;
+    }
+    .activity-header {
+      padding: 8px 14px; font-size: 12px; color: var(--text-secondary);
+      border-bottom: 1px solid var(--border-color);
+      position: sticky; top: 0;
+      background: var(--bg-color); z-index: 2;
+    }
+    .activity-item {
+      display: flex; align-items: flex-start; gap: 8px;
+      padding: 8px 14px;
+      border-bottom: 1px solid var(--border-color);
+      font-size: 12px; line-height: 1.4;
+    }
+    .activity-icon {
+      flex-shrink: 0; width: 16px; height: 16px; margin-top: 1px;
+    }
+    .activity-icon svg { width: 16px; height: 16px; }
+    .activity-text { flex: 1; min-width: 0; }
+    .activity-repo {
+      color: var(--accent-color); font-weight: 500;
+    }
+    .activity-time {
+      flex-shrink: 0; font-size: 11px; color: var(--text-secondary);
+      margin-top: 1px;
+    }
+    .activity-empty {
+      padding: 24px 14px; text-align: center;
+      color: var(--text-secondary); font-size: 13px;
+    }
+
+    /* Offline indicator */
+    .offline-bar {
+      display: none; padding: 4px 14px;
+      background: rgba(210,153,34,0.15);
+      color: var(--yellow); font-size: 11px;
+      text-align: center; flex-shrink: 0;
+    }
+    .offline-bar.visible { display: block; }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--text-secondary); }
+  </style>
+</head>
+<body>
+
+  <!-- Loading -->
+  <div class="loading-state" id="loadingState">
+    <div class="spinner"></div>
+    <span>Connecting to GitHub...</span>
+  </div>
+
+  <!-- Setup -->
+  <div class="setup-state" id="setupState">
+    <svg class="setup-icon" viewBox="0 0 16 16" fill="currentColor">
+      <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"/>
+    </svg>
+    <div class="setup-title">GitHub Profile</div>
+    <div class="setup-hint">
+      Enter a Personal Access Token with <strong>read:user</strong> and <strong>repo</strong> scopes to get started.
+    </div>
+    <input type="password" class="pat-input" id="patInput" placeholder="ghp_xxxxxxxxxxxx" autocomplete="off" spellcheck="false">
+    <button class="setup-btn" id="setupBtn" onclick="onSetupSubmit()">Connect</button>
+    <div class="setup-error" id="setupError"></div>
+  </div>
+
+  <!-- Error -->
+  <div class="error-state" id="errorState">
+    <div class="error-msg" id="errorMsg">Something went wrong.</div>
+    <button class="error-btn" onclick="onRetry()">Retry</button>
+    <button class="error-btn" onclick="onDisconnect()">Change Token</button>
+  </div>
+
+  <!-- Content -->
+  <div class="content-area" id="contentArea">
+    <div class="offline-bar" id="offlineBar">Offline — showing cached data</div>
+    <div class="header-bar" id="headerBar">
+      <img class="avatar" id="avatarImg" src="" alt="">
+      <div class="avatar-fallback" id="avatarFallback"></div>
+      <div class="header-info">
+        <div class="header-name" id="headerName">—</div>
+        <div class="header-login" id="headerLogin">—</div>
+      </div>
+    </div>
+    <div class="stats-grid" id="statsGrid"></div>
+    <div class="contrib-section" id="contribSection">
+      <div class="contrib-header">
+        <span class="contrib-title">Contributions</span>
+        <span class="contrib-total" id="contribTotal"></span>
+      </div>
+      <div class="contrib-months" id="contribMonths"></div>
+      <div class="contrib-graph-wrap">
+        <div class="contrib-graph" id="contribGraph"></div>
+      </div>
+      <div class="contrib-streak" id="contribStreak"></div>
+    </div>
+    <div class="activity-section" id="activitySection">
+      <div class="activity-header">Recent Activity</div>
+      <div id="activityList"></div>
+    </div>
+  </div>
+
+  <!-- Settings Button -->
+  <div class="settings-btn" id="settingsBtn" onclick="openSettings()">
+    <svg viewBox="0 0 16 16"><path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/><path d="M7.07.65a.85.85 0 0 1 1.86 0l.26 1.54a5.55 5.55 0 0 1 1.36.56l1.3-.85a.85.85 0 0 1 1.16.16l.05.05a.85.85 0 0 1 .1 1.11l-.84 1.3c.24.43.43.89.56 1.37l1.54.25a.85.85 0 0 1 0 1.86l-1.54.26a5.55 5.55 0 0 1-.56 1.36l.85 1.3a.85.85 0 0 1-.16 1.16l-.05.05a.85.85 0 0 1-1.11.1l-1.3-.84a5.55 5.55 0 0 1-1.37.56l-.25 1.54a.85.85 0 0 1-1.86 0l-.26-1.54a5.55 5.55 0 0 1-1.36-.56l-1.3.85a.85.85 0 0 1-1.16-.16l-.05-.05a.85.85 0 0 1-.1-1.11l.84-1.3a5.55 5.55 0 0 1-.56-1.37l-1.54-.25a.85.85 0 0 1 0-1.86l1.54-.26a5.55 5.55 0 0 1 .56-1.36l-.85-1.3a.85.85 0 0 1 .16-1.16l.05-.05a.85.85 0 0 1 1.11-.1l1.3.84a5.55 5.55 0 0 1 1.37-.56L7.07.65zM8 10.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z"/></svg>
+  </div>
+
+  <!-- Settings Modal -->
+  <div class="settings-modal" id="settingsModal" onclick="onSettingsBackdropClick(event)">
+    <div class="settings-panel">
+      <h3>Settings</h3>
+      <div class="settings-row">
+        <label>Account</label>
+        <span id="settingsLogin">—</span>
+      </div>
+      <div class="settings-row">
+        <label>Refresh interval</label>
+        <span id="settingsRefresh">5 min</span>
+      </div>
+      <div class="settings-row">
+        <label>Last updated</label>
+        <span id="settingsLastUpdate">—</span>
+      </div>
+      <div class="settings-danger">
+        <button class="disconnect-btn" onclick="onDisconnect()">Disconnect Token</button>
+      </div>
+      <div class="settings-close">
+        <button class="settings-close-btn" onclick="closeSettings()">Close</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+  // === CONSTANTS ===
+  var PAT_KEY = 'gh_profile_pat';
+  var CACHE_KEY = 'gh_profile_cache';
+  var GQL_URL = 'https://api.github.com/graphql';
+
+  var PROFILE_QUERY = '{ viewer { login name avatarUrl followers { totalCount } following { totalCount } repositories(ownerAffiliations: OWNER, first: 100, orderBy: {field: STARGAZERS, direction: DESC}) { totalCount nodes { stargazerCount } } pullRequests { totalCount } issues { totalCount } contributionsCollection { totalCommitContributions totalPullRequestContributions totalIssueContributions totalPullRequestReviewContributions restrictedContributionsCount contributionCalendar { totalContributions weeks { contributionDays { contributionCount date color } } } } } }';
+
+  // === STATE ===
+  var state = {
+    pat: null,
+    login: null,
+    lastFetch: 0,
+    rateLimitRemaining: null,
+    rateLimitReset: null,
+    profileTimerId: null,
+    feedTimerId: null,
+    activityEtag: null,
+    cachedProfile: null,
+    cachedEvents: null
+  };
+
+  // === STORAGE (iframe-safe) ===
+  function loadPAT() {
+    try { return localStorage.getItem(PAT_KEY); }
+    catch (e) { return null; }
+  }
+
+  function savePAT(pat) {
+    try { localStorage.setItem(PAT_KEY, pat); }
+    catch (e) {}
+  }
+
+  function clearPAT() {
+    try { localStorage.removeItem(PAT_KEY); }
+    catch (e) {}
+  }
+
+  function loadCache() {
+    try {
+      var raw = localStorage.getItem(CACHE_KEY);
+      if (!raw) return null;
+      var parsed = JSON.parse(raw);
+      if (Date.now() - parsed.timestamp > 3600000) return null;
+      return parsed.data;
+    } catch (e) { return null; }
+  }
+
+  function saveCache(data) {
+    try {
+      localStorage.setItem(CACHE_KEY, JSON.stringify({
+        timestamp: Date.now(),
+        data: data
+      }));
+    } catch (e) {}
+  }
+
+  // === API ===
+  async function graphqlQuery(query, variables) {
+    var resp = await fetch(GQL_URL, {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + state.pat,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ query: query, variables: variables || {} })
+    });
+
+    var remaining = resp.headers.get('x-ratelimit-remaining');
+    var reset = resp.headers.get('x-ratelimit-reset');
+    if (remaining !== null) state.rateLimitRemaining = parseInt(remaining, 10);
+    if (reset !== null) state.rateLimitReset = parseInt(reset, 10);
+
+    if (resp.status === 401) throw new Error('TOKEN_INVALID');
+    if (resp.status === 403) throw new Error('RATE_LIMITED');
+    if (!resp.ok) throw new Error('API_ERROR_' + resp.status);
+
+    var json = await resp.json();
+    if (json.errors && json.errors.length > 0) {
+      throw new Error('GRAPHQL_ERROR: ' + (json.errors[0].message || 'Unknown'));
+    }
+    return json.data;
+  }
+
+  async function validateToken() {
+    var data = await graphqlQuery('{ viewer { login name avatarUrl } }');
+    return data.viewer;
+  }
+
+  // === UI STATE ===
+  function showState(name) {
+    document.getElementById('loadingState').style.display = name === 'loading' ? '' : 'none';
+    document.getElementById('setupState').style.display = name === 'setup' ? 'flex' : 'none';
+    document.getElementById('errorState').style.display = name === 'error' ? 'flex' : 'none';
+    document.getElementById('contentArea').style.display = name === 'content' ? 'flex' : 'none';
+    document.getElementById('settingsBtn').style.display = name === 'content' ? 'flex' : 'none';
+  }
+
+  function showSetupError(msg) {
+    var el = document.getElementById('setupError');
+    el.textContent = msg;
+    el.style.display = msg ? '' : 'none';
+  }
+
+  function showError(msg) {
+    document.getElementById('errorMsg').textContent = msg;
+    showState('error');
+  }
+
+  // === SETUP FLOW ===
+  async function onSetupSubmit() {
+    var input = document.getElementById('patInput');
+    var btn = document.getElementById('setupBtn');
+    var pat = input.value.trim();
+
+    if (!pat) {
+      showSetupError('Please enter a token.');
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Validating...';
+    showSetupError('');
+
+    state.pat = pat;
+    try {
+      var data = await fetchProfileData();
+      savePAT(pat);
+      state.login = data.viewer.login;
+      state.cachedProfile = data;
+      state.lastFetch = Date.now();
+      document.getElementById('settingsLogin').textContent = '@' + data.viewer.login;
+      renderHeader(data.viewer);
+      renderStats(data);
+      renderContribGraph(data);
+      showState('content');
+      fetchAndRenderFeed();
+      saveCache({ profile: data, events: null });
+      startPolling();
+    } catch (err) {
+      state.pat = null;
+      var msg = err.message || '';
+      if (msg === 'TOKEN_INVALID') {
+        showSetupError('Invalid token. Check scopes and try again.');
+      } else if (msg === 'RATE_LIMITED') {
+        showSetupError('Rate limited. Try again in a few minutes.');
+      } else {
+        showSetupError('Connection failed. Check network.');
+      }
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Connect';
+    }
+  }
+
+  function onRetry() {
+    startApp();
+  }
+
+  function onDisconnect() {
+    stopPolling();
+    state.pat = null;
+    state.login = null;
+    clearPAT();
+    closeSettings();
+    document.getElementById('patInput').value = '';
+    showSetupError('');
+    showState('setup');
+  }
+
+  // === SETTINGS MODAL ===
+  function openSettings() {
+    document.getElementById('settingsRefresh').textContent = getRefreshInterval() + ' min';
+    var lastStr = state.lastFetch ? new Date(state.lastFetch).toLocaleTimeString() : '—';
+    document.getElementById('settingsLastUpdate').textContent = lastStr;
+    document.getElementById('settingsModal').classList.add('visible');
+  }
+
+  function closeSettings() {
+    document.getElementById('settingsModal').classList.remove('visible');
+  }
+
+  function onSettingsBackdropClick(event) {
+    if (event.target.id === 'settingsModal') closeSettings();
+  }
+
+  // === RENDER: HEADER ===
+  function renderHeader(viewer) {
+    var img = document.getElementById('avatarImg');
+    var fallback = document.getElementById('avatarFallback');
+    img.src = viewer.avatarUrl || '';
+    img.onerror = function() {
+      img.style.display = 'none';
+      fallback.style.display = 'flex';
+      fallback.textContent = (viewer.login || '?')[0].toUpperCase();
+    };
+    img.onload = function() {
+      img.style.display = '';
+      fallback.style.display = 'none';
+    };
+    document.getElementById('headerName').textContent = viewer.name || viewer.login;
+    document.getElementById('headerLogin').textContent = '@' + viewer.login;
+  }
+
+  // === RENDER: STATS ===
+  function renderStats(data) {
+    var v = data.viewer;
+    var cc = v.contributionsCollection;
+    var stars = (v.repositories.nodes || []).reduce(function(s, r) { return s + (r.stargazerCount || 0); }, 0);
+    var items = [
+      { value: cc.totalCommitContributions, label: 'Commits' },
+      { value: v.pullRequests.totalCount, label: 'PRs' },
+      { value: v.issues.totalCount, label: 'Issues' },
+      { value: cc.totalPullRequestReviewContributions, label: 'Reviews' },
+      { value: stars, label: 'Stars' },
+      { value: v.followers.totalCount, label: 'Followers' }
+    ];
+    var html = '';
+    for (var i = 0; i < items.length; i++) {
+      html += '<div class="stat-card"><div class="stat-value">' + formatNumber(items[i].value) + '</div><div class="stat-label">' + items[i].label + '</div></div>';
+    }
+    document.getElementById('statsGrid').innerHTML = html;
+  }
+
+  // === RENDER: CONTRIBUTION GRAPH ===
+  function renderContribGraph(data) {
+    var cal = data.viewer.contributionsCollection.contributionCalendar;
+    var weeks = cal.weeks;
+    var total = cal.totalContributions;
+
+    // Filter by range
+    var range = getGraphRange();
+    var now = new Date();
+    var cutoff = new Date(now);
+    if (range === '6 Months') cutoff.setMonth(cutoff.getMonth() - 6);
+    else if (range === '3 Months') cutoff.setMonth(cutoff.getMonth() - 3);
+    else cutoff.setFullYear(cutoff.getFullYear() - 1);
+    var cutoffStr = cutoff.toISOString().slice(0, 10);
+
+    var filteredWeeks = [];
+    var rangeTotal = 0;
+    for (var w = 0; w < weeks.length; w++) {
+      var days = weeks[w].contributionDays;
+      var kept = [];
+      for (var d = 0; d < days.length; d++) {
+        if (days[d].date >= cutoffStr) {
+          kept.push(days[d]);
+          rangeTotal += days[d].contributionCount;
+        }
+      }
+      if (kept.length > 0) filteredWeeks.push(kept);
+    }
+
+    // Month labels
+    var monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    var monthsHtml = '';
+    var lastMonth = -1;
+    var colCount = filteredWeeks.length;
+    for (var w = 0; w < filteredWeeks.length; w++) {
+      var firstDay = new Date(filteredWeeks[w][0].date);
+      var m = firstDay.getMonth();
+      if (m !== lastMonth) {
+        monthsHtml += '<span class="contrib-month" style="width:' + (10 + 2) + 'px">' + monthNames[m] + '</span>';
+        lastMonth = m;
+      } else {
+        monthsHtml += '<span class="contrib-month" style="width:' + (10 + 2) + 'px"></span>';
+      }
+    }
+    document.getElementById('contribMonths').innerHTML = monthsHtml;
+
+    // Graph cells
+    var cellsHtml = '';
+    for (var w = 0; w < filteredWeeks.length; w++) {
+      var days = filteredWeeks[w];
+      for (var d = 0; d < days.length; d++) {
+        var color = days[d].contributionCount === 0 ? 'var(--contrib-empty)' : (days[d].color || 'var(--contrib-l2)');
+        cellsHtml += '<div class="contrib-cell" style="background:' + color + '" title="' + days[d].date + ': ' + days[d].contributionCount + '"></div>';
+      }
+      // Pad incomplete weeks
+      for (var p = days.length; p < 7; p++) {
+        cellsHtml += '<div class="contrib-cell"></div>';
+      }
+    }
+    document.getElementById('contribGraph').innerHTML = cellsHtml;
+    document.getElementById('contribGraph').style.gridTemplateColumns = 'repeat(' + filteredWeeks.length + ', 10px)';
+    document.getElementById('contribTotal').innerHTML = '<strong>' + formatNumber(rangeTotal) + '</strong> contributions';
+
+    // Current streak
+    var streak = 0;
+    var allDays = [];
+    for (var w = weeks.length - 1; w >= 0; w--) {
+      var days = weeks[w].contributionDays;
+      for (var d = days.length - 1; d >= 0; d--) {
+        allDays.push(days[d]);
+      }
+    }
+    // Skip today if no contributions yet
+    var today = new Date().toISOString().slice(0, 10);
+    var startIdx = 0;
+    if (allDays.length > 0 && allDays[0].date === today && allDays[0].contributionCount === 0) {
+      startIdx = 1;
+    }
+    for (var i = startIdx; i < allDays.length; i++) {
+      if (allDays[i].contributionCount > 0) streak++;
+      else break;
+    }
+    document.getElementById('contribStreak').innerHTML = streak > 0
+      ? 'Current streak: <strong>' + streak + ' day' + (streak !== 1 ? 's' : '') + '</strong>'
+      : '';
+  }
+
+  // === RENDER: ACTIVITY FEED ===
+  var EVENT_ICONS = {
+    push: '<svg viewBox="0 0 16 16" fill="var(--green)"><path d="M8 1a.75.75 0 0 1 .75.75v6.44l2.22-2.22a.75.75 0 1 1 1.06 1.06l-3.5 3.5a.75.75 0 0 1-1.06 0l-3.5-3.5a.75.75 0 0 1 1.06-1.06L7.25 8.19V1.75A.75.75 0 0 1 8 1z"/></svg>',
+    pr: '<svg viewBox="0 0 16 16" fill="var(--green)"><path d="M1.5 3.25a2.25 2.25 0 1 1 3 2.122v5.256a2.251 2.251 0 1 1-1.5 0V5.372A2.25 2.25 0 0 1 1.5 3.25zm5.677-.177L9.573.677A.25.25 0 0 1 10 .854V2.5h1A2.5 2.5 0 0 1 13.5 5v5.628a2.251 2.251 0 1 1-1.5 0V5a1 1 0 0 0-1-1h-1v1.646a.25.25 0 0 1-.427.177L7.177 3.427a.25.25 0 0 1 0-.354z"/></svg>',
+    issue: '<svg viewBox="0 0 16 16" fill="var(--green)"><circle cx="8" cy="8" r="7" fill="none" stroke="var(--green)" stroke-width="1.5"/><path d="M8 4v4M8 10v1" stroke="var(--green)" stroke-width="1.5" stroke-linecap="round"/></svg>',
+    comment: '<svg viewBox="0 0 16 16" fill="var(--text-secondary)"><path d="M1 2.75C1 1.784 1.784 1 2.75 1h10.5c.966 0 1.75.784 1.75 1.75v7.5A1.75 1.75 0 0 1 13.25 12H9.06l-2.573 2.573A1.458 1.458 0 0 1 4 13.543V12H2.75A1.75 1.75 0 0 1 1 10.25v-7.5z"/></svg>',
+    create: '<svg viewBox="0 0 16 16" fill="var(--accent-color)"><path d="M2 2.5A2.5 2.5 0 0 1 4.5 0h8.75a.75.75 0 0 1 .75.75v12.5a.75.75 0 0 1-.75.75h-2.5a.75.75 0 0 1 0-1.5h1.75v-2h-8a1 1 0 0 0-.714 1.7.75.75 0 1 1-1.072 1.05A2.495 2.495 0 0 1 2 11.5v-9z"/></svg>',
+    review: '<svg viewBox="0 0 16 16" fill="var(--purple)"><path d="M1.5 2.75a.25.25 0 0 1 .25-.25h12.5a.25.25 0 0 1 .25.25v8.5a.25.25 0 0 1-.25.25h-6.5a.75.75 0 0 0-.53.22L4.5 14.44v-2.19a.75.75 0 0 0-.75-.75H1.75a.25.25 0 0 1-.25-.25v-8.5z"/></svg>',
+    star: '<svg viewBox="0 0 16 16" fill="var(--yellow)"><path d="M8 .25a.75.75 0 0 1 .673.418l1.882 3.815 4.21.612a.75.75 0 0 1 .416 1.279l-3.046 2.97.719 4.192a.751.751 0 0 1-1.088.791L8 12.347l-3.766 1.98a.75.75 0 0 1-1.088-.79l.72-4.194L.818 6.374a.75.75 0 0 1 .416-1.28l4.21-.611L7.327.668A.75.75 0 0 1 8 .25z"/></svg>',
+    fallback: '<svg viewBox="0 0 16 16" fill="var(--text-secondary)"><circle cx="8" cy="8" r="6" fill="none" stroke="var(--text-secondary)" stroke-width="1.5"/></svg>'
+  };
+
+  function processEvent(evt) {
+    var type = evt.type;
+    var repo = evt.repo ? evt.repo.name : '';
+    var pl = evt.payload || {};
+    var icon, text;
+
+    if (type === 'PushEvent') {
+      var n = (pl.commits || []).length;
+      icon = EVENT_ICONS.push;
+      text = 'Pushed ' + n + ' commit' + (n !== 1 ? 's' : '') + ' to <span class="activity-repo">' + escHtml(repo) + '</span>';
+    } else if (type === 'PullRequestEvent') {
+      var act = pl.action || 'opened';
+      if (pl.pull_request && pl.pull_request.merged) act = 'merged';
+      icon = EVENT_ICONS.pr;
+      text = act.charAt(0).toUpperCase() + act.slice(1) + ' PR #' + (pl.number || '') + ' in <span class="activity-repo">' + escHtml(repo) + '</span>';
+    } else if (type === 'IssuesEvent') {
+      icon = EVENT_ICONS.issue;
+      text = (pl.action || 'opened').charAt(0).toUpperCase() + (pl.action || 'opened').slice(1) + ' issue #' + (pl.issue ? pl.issue.number : '') + ' in <span class="activity-repo">' + escHtml(repo) + '</span>';
+    } else if (type === 'IssueCommentEvent') {
+      icon = EVENT_ICONS.comment;
+      text = 'Commented on #' + (pl.issue ? pl.issue.number : '') + ' in <span class="activity-repo">' + escHtml(repo) + '</span>';
+    } else if (type === 'PullRequestReviewEvent') {
+      icon = EVENT_ICONS.review;
+      text = 'Reviewed PR #' + (pl.pull_request ? pl.pull_request.number : '') + ' in <span class="activity-repo">' + escHtml(repo) + '</span>';
+    } else if (type === 'CreateEvent') {
+      icon = EVENT_ICONS.create;
+      text = 'Created ' + (pl.ref_type || 'branch') + (pl.ref ? ' ' + escHtml(pl.ref) : '') + ' in <span class="activity-repo">' + escHtml(repo) + '</span>';
+    } else if (type === 'WatchEvent') {
+      icon = EVENT_ICONS.star;
+      text = 'Starred <span class="activity-repo">' + escHtml(repo) + '</span>';
+    } else {
+      return null;
+    }
+    return { icon: icon, text: text, time: evt.created_at };
+  }
+
+  function renderActivityFeed(events) {
+    var list = document.getElementById('activityList');
+    if (!events || events.length === 0) {
+      list.innerHTML = '<div class="activity-empty">No recent activity</div>';
+      return;
+    }
+    var html = '';
+    var count = 0;
+    for (var i = 0; i < events.length && count < 30; i++) {
+      var item = processEvent(events[i]);
+      if (!item) continue;
+      html += '<div class="activity-item"><div class="activity-icon">' + item.icon + '</div><div class="activity-text">' + item.text + '</div><div class="activity-time">' + relativeTime(item.time) + '</div></div>';
+      count++;
+    }
+    if (count === 0) {
+      list.innerHTML = '<div class="activity-empty">No recent activity</div>';
+    } else {
+      list.innerHTML = html;
+    }
+  }
+
+  // === DATA FETCHING ===
+  async function fetchProfileData() {
+    var data = await graphqlQuery(PROFILE_QUERY);
+    return data;
+  }
+
+  async function fetchActivityFeed() {
+    var headers = {
+      'Authorization': 'Bearer ' + state.pat,
+      'Accept': 'application/vnd.github.v3+json'
+    };
+    if (state.activityEtag) headers['If-None-Match'] = state.activityEtag;
+
+    var resp = await fetch(
+      'https://api.github.com/users/' + encodeURIComponent(state.login) + '/events?per_page=50',
+      { headers: headers }
+    );
+
+    if (resp.status === 304) return null;
+    if (resp.status === 401) throw new Error('TOKEN_INVALID');
+    if (resp.status === 403) throw new Error('RATE_LIMITED');
+    if (!resp.ok) throw new Error('API_ERROR_' + resp.status);
+
+    state.activityEtag = resp.headers.get('etag');
+    return await resp.json();
+  }
+
+  async function fetchAndRenderProfile() {
+    try {
+      var data = await fetchProfileData();
+      state.lastFetch = Date.now();
+      renderHeader(data.viewer);
+      renderStats(data);
+      renderContribGraph(data);
+      saveCache({ profile: data, events: state.cachedEvents || null });
+      document.getElementById('offlineBar').classList.remove('visible');
+    } catch (err) {
+      handleFetchError(err);
+    }
+  }
+
+  async function fetchAndRenderFeed() {
+    try {
+      var events = await fetchActivityFeed();
+      if (events !== null) {
+        state.cachedEvents = events;
+        renderActivityFeed(events);
+        saveCache({ profile: state.cachedProfile || null, events: events });
+      }
+      document.getElementById('offlineBar').classList.remove('visible');
+    } catch (err) {
+      if ((err.message || '') === 'TOKEN_INVALID') handleFetchError(err);
+    }
+  }
+
+  function handleFetchError(err) {
+    var msg = err.message || '';
+    if (msg === 'TOKEN_INVALID') {
+      clearPAT();
+      state.pat = null;
+      stopPolling();
+      showSetupError('Token expired or revoked. Enter a new token.');
+      showState('setup');
+    } else if (msg === 'RATE_LIMITED') {
+      document.getElementById('offlineBar').textContent = 'Rate limited — showing cached data';
+      document.getElementById('offlineBar').classList.add('visible');
+    } else {
+      document.getElementById('offlineBar').classList.add('visible');
+    }
+  }
+
+  // === POLLING ===
+  function startPolling() {
+    stopPolling();
+    var ms = getRefreshInterval() * 60 * 1000;
+    state.profileTimerId = setInterval(fetchAndRenderProfile, ms);
+    state.feedTimerId = setInterval(fetchAndRenderFeed, 120000);
+  }
+
+  function stopPolling() {
+    if (state.profileTimerId) clearInterval(state.profileTimerId);
+    if (state.feedTimerId) clearInterval(state.feedTimerId);
+    state.profileTimerId = null;
+    state.feedTimerId = null;
+  }
+
+  // === HELPERS ===
+  function getRefreshInterval() {
+    if (typeof refreshInterval !== 'undefined') return parseInt(refreshInterval, 10) || 5;
+    return 5;
+  }
+
+  function getGraphRange() {
+    if (typeof graphRange !== 'undefined') return graphRange;
+    return '1 Year';
+  }
+
+  function relativeTime(dateStr) {
+    var now = Date.now();
+    var then = new Date(dateStr).getTime();
+    var sec = Math.floor((now - then) / 1000);
+    if (sec < 60) return 'just now';
+    var min = Math.floor(sec / 60);
+    if (min < 60) return min + 'm ago';
+    var hr = Math.floor(min / 60);
+    if (hr < 24) return hr + 'h ago';
+    var day = Math.floor(hr / 24);
+    if (day < 30) return day + 'd ago';
+    return Math.floor(day / 30) + 'mo ago';
+  }
+
+  function formatNumber(n) {
+    if (n >= 1000) return (n / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
+    return String(n);
+  }
+
+  function escHtml(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  // === iCUE INTEGRATION ===
+  function applyStyles() {
+    var root = document.documentElement;
+    var t = Number(typeof transparency !== 'undefined' ? transparency : 100);
+    root.style.setProperty('--transparency', Number.isFinite(t) ? t / 100 : 1);
+    root.style.setProperty('--text-primary', typeof textColor !== 'undefined' ? textColor : '#e6edf3');
+    root.style.setProperty('--accent-color', typeof accentColor !== 'undefined' ? accentColor : '#58a6ff');
+    root.style.setProperty('--bg-color', typeof backgroundColor !== 'undefined' ? backgroundColor : '#0d1117');
+  }
+
+  function onIcueDataUpdated() {
+    applyStyles();
+  }
+
+  function onIcueInitialized() {
+    onIcueDataUpdated();
+    startApp();
+  }
+
+  // === APP STARTUP ===
+  async function startApp() {
+    var pat = loadPAT();
+    if (!pat) {
+      showState('setup');
+      return;
+    }
+
+    state.pat = pat;
+
+    // Try cache first for instant render
+    var cached = loadCache();
+    if (cached && cached.profile) {
+      renderHeader(cached.profile.viewer);
+      renderStats(cached.profile);
+      renderContribGraph(cached.profile);
+      if (cached.events) {
+        state.cachedEvents = cached.events;
+        renderActivityFeed(cached.events);
+      }
+      state.login = cached.profile.viewer.login;
+      document.getElementById('settingsLogin').textContent = '@' + cached.profile.viewer.login;
+      showState('content');
+    } else {
+      showState('loading');
+    }
+
+    try {
+      var data = await fetchProfileData();
+      state.login = data.viewer.login;
+      state.cachedProfile = data;
+      state.lastFetch = Date.now();
+      document.getElementById('settingsLogin').textContent = '@' + data.viewer.login;
+      renderHeader(data.viewer);
+      renderStats(data);
+      renderContribGraph(data);
+      showState('content');
+
+      var events = await fetchActivityFeed();
+      if (events) {
+        state.cachedEvents = events;
+        renderActivityFeed(events);
+      }
+      saveCache({ profile: data, events: state.cachedEvents || null });
+      startPolling();
+    } catch (err) {
+      var msg = err.message || '';
+      if (msg === 'TOKEN_INVALID') {
+        clearPAT();
+        state.pat = null;
+        showSetupError('Token expired or revoked. Enter a new token.');
+        showState('setup');
+      } else if (msg === 'RATE_LIMITED') {
+        if (cached) {
+          document.getElementById('offlineBar').textContent = 'Rate limited — showing cached data';
+          document.getElementById('offlineBar').classList.add('visible');
+          startPolling();
+        } else {
+          showError('Rate limited. Try again later.');
+        }
+      } else {
+        if (cached) {
+          document.getElementById('offlineBar').classList.add('visible');
+          startPolling();
+        } else {
+          showError('Network error. Check connection.');
+        }
+      }
+    }
+  }
+
+  // iCUE API binding
+  if (typeof window !== 'undefined') {
+    window.icueEvents = {
+      'onDataUpdated': onIcueDataUpdated,
+      'onICUEInitialized': onIcueInitialized
+    };
+  }
+
+  // Browser fallback
+  if (typeof iCUE_initialized !== 'undefined' && iCUE_initialized) {
+    onIcueInitialized();
+  } else {
+    applyStyles();
+    startApp();
+  }
+
+  // Enter key on PAT input
+  document.getElementById('patInput').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') onSetupSubmit();
+  });
+</script>
+</body>
+</html>
