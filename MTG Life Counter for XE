@@ -235,6 +235,20 @@
       display: flex; flex-direction: column;
       gap: 1.05%;
       flex-shrink: 0;
+      min-height: 0;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding-right: 4px;
+      box-sizing: border-box;
+    }
+
+    .tools-panel::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .tools-panel::-webkit-scrollbar-thumb {
+      background: rgba(255,255,255,0.2);
+      border-radius: 8px;
     }
 
     .tool-section {
@@ -247,8 +261,8 @@
       display: flex; flex-direction: column;
       align-items: center;
       gap: 8px;
-      flex: 1;
-      min-height: 0;
+      flex: 0 0 auto;
+      min-height: 86px;
       justify-content: center;
       box-shadow:
         inset 0 1px 0 rgba(255,255,255,0.09),
@@ -318,6 +332,15 @@
       text-align: center;
       flex: 1 1 100%;
       min-height: 34px;
+    }
+
+    @media (max-height: 760px) {
+      .tools-panel { gap: 8px; }
+      .tool-section { padding: 5.5% 7.5%; }
+      .tool-value { font-size: clamp(14px, calc(var(--base-font) * 1.02), 52px); }
+      .tool-subvalue { font-size: clamp(8px, calc(var(--label-font) * 0.8), 16px); }
+      .tool-btn { min-height: 27px; padding: 3px 7px; }
+      .tool-btn.block { min-height: 30px; }
     }
 
     .dice-result {
