@@ -1444,6 +1444,7 @@
       const p = state.players[playerIndex];
       const html = `
         <div class="quick-actions">
+          <div class="quick-btn" onclick="renamePlayer(${playerIndex})">Rename</div>
           <div class="quick-btn" onclick="togglePlayerAlive(${playerIndex})">${p.alive ? 'Kill' : 'Unkill'} Player</div>
           <div class="quick-btn" onclick="togglePlayerPartners(${playerIndex})">${p.partners ? 'Disable' : 'Enable'} Partners</div>
           <div class="quick-btn" onclick="openCountersModal(${playerIndex})">Counters</div>
@@ -1455,6 +1456,22 @@
         </div>
       `;
       openModal(p.name + ' Options', html);
+    }
+
+    function renamePlayer(playerIndex) {
+      const p = state.players[playerIndex];
+      if (!p) return;
+      const currentName = p.name || ('Player ' + (playerIndex + 1));
+      const entered = window.prompt('Enter player name:', currentName);
+      if (entered === null) return;
+      const normalized = entered.replace(/\s+/g, ' ').trim();
+      if (!normalized) return;
+      const nextName = normalized.slice(0, 24);
+      if (nextName === currentName) return;
+      p.name = nextName;
+      logHistory('Player ' + (playerIndex + 1) + ' renamed: ' + currentName + ' -> ' + nextName + '.');
+      renderPlayers();
+      openPlayerActionsModal(playerIndex);
     }
 
     function togglePlayerAlive(playerIndex) {
