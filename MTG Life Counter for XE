@@ -1,0 +1,1351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tr('MTG Life Counter')</title>
+  <link rel="icon" type="image/svg+xml" href="images/mtglifecounter.svg">
+
+  <meta name="x-icue-restrictions"
+        data-restrictions='[
+          { "device": "dashboard_lcd" }
+        ]'>
+
+  <meta name="x-icue-interactive">
+
+  <!-- Game Settings -->
+  <meta name="x-icue-property" content="playerCount" data-label="tr('Players')" data-type="slider" data-default="4" data-min="1" data-max="10" data-step="1">
+  <meta name="x-icue-property" content="gameMode" data-label="tr('Game Mode')" data-type="tab-buttons" data-values="['Commander','Standard']" data-default="'Commander'">
+
+  <!-- Player Colors -->
+  <meta name="x-icue-property" content="player1Color" data-label="tr('Player 1 Color')" data-type="color" data-default="'#e74c3c'">
+  <meta name="x-icue-property" content="player2Color" data-label="tr('Player 2 Color')" data-type="color" data-default="'#3498db'">
+  <meta name="x-icue-property" content="player3Color" data-label="tr('Player 3 Color')" data-type="color" data-default="'#2ecc71'">
+  <meta name="x-icue-property" content="player4Color" data-label="tr('Player 4 Color')" data-type="color" data-default="'#f39c12'">
+
+  <!-- Widget Personalization (MUST BE LAST GROUP) -->
+  <meta name="x-icue-property" content="textColor" data-label="tr('Text Color')" data-type="color" data-default="'#ffffff'">
+  <meta name="x-icue-property" content="accentColor" data-label="tr('Accent Color')" data-type="color" data-default="'#c8a2ff'">
+  <meta name="x-icue-property" content="backgroundColor" data-label="tr('Background')" data-type="color" data-default="'#1a1a2e'">
+  <meta name="x-icue-property" content="transparency" data-label="tr('Transparency')" data-type="slider" data-default="100" data-min="0" data-max="100" data-step="1">
+
+  <script id="x-icue-groups" type="application/json">
+  [
+    { "title": "tr('MTG Life Counter')", "properties": ["playerCount", "gameMode", "player1Color", "player2Color", "player3Color", "player4Color"] },
+    { "title": "tr('Widget Personalization')", "properties": ["textColor", "accentColor", "backgroundColor", "transparency"] }
+  ]
+  </script>
+
+  <style>
+    :root {
+      --text-color: #ffffff;
+      --accent-color: #c8a2ff;
+      --bg-color: #1a1a2e;
+      --transparency: 1;
+      --player-cols: 2;
+      --base-font: calc(min(100vw, 100vh) / 12);
+      --secondary-font: calc(var(--base-font) * 0.6);
+      --label-font: calc(var(--base-font) * 0.45);
+      --p1-color: #e74c3c;
+      --p2-color: #3498db;
+      --p3-color: #2ecc71;
+      --p4-color: #f39c12;
+    }
+
+    html { overflow: hidden; }
+
+    body {
+      margin: 0; padding: 0;
+      width: 100vw; height: 100vh;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: transparent;
+      user-select: none; -webkit-user-select: none;
+      touch-action: manipulation;
+    }
+
+    .widget-root {
+      width: 100%; height: 100%;
+      opacity: var(--transparency);
+      background: var(--bg-color);
+      color: var(--text-color);
+      display: flex; flex-direction: row;
+      padding: 1.5% 1%;
+      box-sizing: border-box;
+      gap: 0.8%;
+    }
+
+    /* === PLAYER CARDS === */
+    .players-area {
+      display: grid;
+      grid-template-columns: repeat(var(--player-cols), minmax(0, 1fr));
+      grid-auto-rows: minmax(0, 1fr);
+      flex: 1; gap: 0.8%;
+      min-width: 0;
+    }
+
+    .players-area.single-view {
+      grid-template-columns: 1fr;
+    }
+
+    .player-card {
+      flex: 1;
+      border-radius: 12px;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      position: relative;
+      overflow: hidden;
+      min-width: 0;
+      cursor: pointer;
+      transition: transform 0.1s;
+    }
+
+    .player-card:active { transform: scale(0.98); }
+
+    .player-card-bg {
+      position: absolute; inset: 0;
+      opacity: 0.25;
+      border-radius: 12px;
+    }
+
+    .player-card-border {
+      position: absolute; inset: 0;
+      border-radius: 12px;
+      border: 2px solid rgba(255,255,255,0.15);
+    }
+
+    .player-inner {
+      position: relative; z-index: 1;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      width: 100%; height: 100%;
+      padding: 4% 2%;
+      box-sizing: border-box;
+    }
+
+    .player-name {
+      font-size: clamp(12px, var(--label-font), 28px);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      opacity: 0.9;
+      margin-bottom: 2%;
+      text-align: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 90%;
+    }
+
+    .life-total {
+      font-size: clamp(24px, calc(var(--base-font) * 2.2), 180px);
+      font-weight: 700;
+      line-height: 1;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.5);
+      transition: transform 0.15s;
+      cursor: pointer;
+    }
+
+    .life-total.changed { transform: scale(1.15); }
+
+    .life-controls {
+      display: flex; gap: 8%;
+      margin-top: 3%;
+      width: 80%;
+      justify-content: center;
+    }
+
+    .life-btn {
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 50%;
+      color: var(--text-color);
+      font-size: clamp(14px, var(--secondary-font), 40px);
+      font-weight: 700;
+      width: clamp(28px, calc(var(--base-font) * 1.1), 70px);
+      height: clamp(28px, calc(var(--base-font) * 1.1), 70px);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+      touch-action: none;
+    }
+
+    .life-btn:hover { background: rgba(255,255,255,0.22); }
+    .life-btn:active { transform: scale(0.9); background: rgba(255,255,255,0.3); }
+
+    /* Counter badges row */
+    .counter-badges {
+      display: flex; gap: 6px;
+      margin-top: 3%;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .badge {
+      font-size: clamp(8px, calc(var(--label-font) * 0.9), 20px);
+      padding: 2px 8px;
+      border-radius: 10px;
+      background: rgba(0,0,0,0.4);
+      border: 1px solid rgba(255,255,255,0.15);
+      display: flex; align-items: center; gap: 4px;
+      cursor: pointer;
+      transition: background 0.15s;
+      white-space: nowrap;
+    }
+
+    .badge:hover { background: rgba(0,0,0,0.6); }
+    .badge:active { background: rgba(255,255,255,0.15); }
+
+    .badge-icon { opacity: 0.7; }
+    .badge-poison { color: #a8e6a3; }
+    .badge-commander { color: #ffcc80; }
+    .badge-energy { color: #81d4fa; }
+    .badge-partner { color: #fff2a8; }
+
+    .swipe-hint {
+      font-size: clamp(8px, calc(var(--label-font) * 0.75), 16px);
+      text-transform: uppercase;
+      opacity: 0.7;
+      letter-spacing: 0.7px;
+      margin-top: 2px;
+      text-align: center;
+    }
+
+    .dead-overlay {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(0,0,0,0.45);
+      text-transform: uppercase;
+      font-size: clamp(20px, calc(var(--base-font) * 1.1), 64px);
+      font-weight: 800;
+      letter-spacing: 1px;
+      pointer-events: none;
+    }
+
+    /* === TOOLS PANEL === */
+    .tools-panel {
+      width: clamp(100px, 14%, 220px);
+      display: flex; flex-direction: column;
+      gap: 0.8%;
+      flex-shrink: 0;
+    }
+
+    .tool-section {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 10px;
+      padding: 6% 8%;
+      display: flex; flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      flex: 1;
+      min-height: 0;
+      justify-content: center;
+    }
+
+    .tool-label {
+      font-size: clamp(8px, calc(var(--label-font) * 0.85), 18px);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      opacity: 0.6;
+      text-align: center;
+    }
+
+    .tool-value {
+      font-size: clamp(16px, calc(var(--base-font) * 1.2), 60px);
+      font-weight: 700;
+      line-height: 1.1;
+      color: var(--accent-color);
+    }
+
+    .tool-subvalue {
+      font-size: clamp(9px, calc(var(--label-font) * 0.85), 18px);
+      opacity: 0.85;
+      text-align: center;
+    }
+
+    .tool-btn-row {
+      display: flex; gap: 6px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .tool-btn {
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 6px;
+      color: var(--text-color);
+      font-size: clamp(8px, calc(var(--label-font) * 0.85), 16px);
+      font-weight: 600;
+      padding: 3px 7px;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+      touch-action: manipulation;
+      white-space: nowrap;
+    }
+
+    .tool-btn:hover { background: rgba(255,255,255,0.2); }
+    .tool-btn:active { transform: scale(0.92); }
+    .tool-btn.active { background: var(--accent-color); color: #000; }
+    .tool-btn.block { width: 100%; text-align: center; }
+
+    .dice-result {
+      font-size: clamp(20px, calc(var(--base-font) * 1.5), 72px);
+      font-weight: 700;
+      color: var(--accent-color);
+      transition: transform 0.2s;
+      line-height: 1;
+    }
+
+    .dice-result.rolling {
+      animation: diceRoll 0.4s ease-out;
+    }
+
+    @keyframes diceRoll {
+      0% { transform: rotate(0deg) scale(0.5); opacity: 0.3; }
+      50% { transform: rotate(180deg) scale(1.2); }
+      100% { transform: rotate(360deg) scale(1); opacity: 1; }
+    }
+
+    .coin-result {
+      font-size: clamp(14px, var(--secondary-font), 36px);
+      font-weight: 700;
+      transition: transform 0.2s;
+    }
+
+    .coin-result.flipping {
+      animation: coinFlip 0.5s ease-out;
+    }
+
+    @keyframes coinFlip {
+      0% { transform: scaleY(1); }
+      25% { transform: scaleY(0); }
+      50% { transform: scaleY(1) scaleX(-1); }
+      75% { transform: scaleY(0) scaleX(-1); }
+      100% { transform: scaleY(1) scaleX(1); }
+    }
+
+    /* Turn tracker */
+    .turn-indicator {
+      display: flex; gap: 4px;
+      align-items: center;
+    }
+
+    .turn-dot {
+      width: clamp(8px, calc(var(--label-font) * 0.7), 18px);
+      height: clamp(8px, calc(var(--label-font) * 0.7), 18px);
+      border-radius: 50%;
+      opacity: 0.3;
+      transition: opacity 0.2s, transform 0.2s;
+      cursor: pointer;
+    }
+
+    .turn-dot.active { opacity: 1; transform: scale(1.3); }
+
+    /* Reset button */
+    .reset-btn {
+      background: rgba(231,76,60,0.2);
+      border: 1px solid rgba(231,76,60,0.4);
+      border-radius: 8px;
+      color: #e74c3c;
+      font-size: clamp(8px, calc(var(--label-font) * 0.85), 16px);
+      font-weight: 600;
+      padding: 5px 10px;
+      cursor: pointer;
+      transition: background 0.15s;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      width: 100%;
+    }
+
+    .reset-btn:hover { background: rgba(231,76,60,0.35); }
+    .reset-btn:active { background: rgba(231,76,60,0.5); }
+
+    /* Counter modal overlay */
+    .counter-modal {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.85);
+      z-index: 100;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3%;
+    }
+
+    .counter-modal.visible { display: flex; }
+
+    .modal-content-wrap {
+      width: min(94%, 900px);
+      max-height: 72%;
+      overflow: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .modal-title {
+      font-size: clamp(14px, var(--secondary-font), 36px);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .modal-counter-row {
+      display: flex; align-items: center; gap: 20px;
+    }
+
+    .modal-counter-label {
+      font-size: clamp(10px, var(--label-font), 24px);
+      opacity: 0.7;
+      min-width: 120px;
+      text-align: right;
+    }
+
+    .modal-counter-value {
+      font-size: clamp(20px, var(--base-font), 56px);
+      font-weight: 700;
+      min-width: 60px;
+      text-align: center;
+    }
+
+    .modal-btn {
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 50%;
+      color: var(--text-color);
+      font-size: clamp(14px, var(--secondary-font), 32px);
+      font-weight: 700;
+      width: clamp(32px, var(--base-font), 56px);
+      height: clamp(32px, var(--base-font), 56px);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .modal-btn:hover { background: rgba(255,255,255,0.22); }
+    .modal-btn:active { background: rgba(255,255,255,0.3); }
+
+    .modal-close {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 8px;
+      color: var(--text-color);
+      font-size: clamp(10px, var(--label-font), 20px);
+      padding: 8px 24px;
+      cursor: pointer;
+      margin-top: 2%;
+    }
+
+    .modal-close:hover { background: rgba(255,255,255,0.15); }
+
+    /* Commander damage grid */
+    .cmdr-damage-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 12px;
+      width: min(90%, 860px);
+    }
+
+    .cmdr-damage-item {
+      display: flex; align-items: center; gap: 10px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 8px;
+      padding: 6px 12px;
+    }
+
+    .cmdr-from-label {
+      font-size: clamp(8px, calc(var(--label-font) * 0.9), 18px);
+      opacity: 0.6;
+      min-width: 40px;
+    }
+
+    .cmdr-dmg-value {
+      font-size: clamp(14px, var(--secondary-font), 32px);
+      font-weight: 700;
+      min-width: 30px;
+      text-align: center;
+    }
+
+    .cmdr-dmg-btn {
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 4px;
+      color: var(--text-color);
+      font-size: clamp(10px, calc(var(--label-font) * 0.9), 18px);
+      font-weight: 700;
+      width: clamp(22px, calc(var(--label-font) * 1.5), 34px);
+      height: clamp(22px, calc(var(--label-font) * 1.5), 34px);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+    }
+
+    .cmdr-dmg-btn:active { background: rgba(255,255,255,0.25); }
+
+    .quick-actions {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      width: min(92%, 780px);
+    }
+
+    .quick-btn {
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.18);
+      border-radius: 8px;
+      padding: 8px;
+      font-size: clamp(9px, calc(var(--label-font) * 0.85), 18px);
+      text-transform: uppercase;
+      text-align: center;
+      cursor: pointer;
+      letter-spacing: 0.6px;
+    }
+
+    .quick-btn:active { background: rgba(255,255,255,0.25); }
+
+    .high-roll-grid {
+      width: min(92%, 800px);
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 8px;
+    }
+
+    .high-roll-item {
+      border-radius: 8px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.16);
+      padding: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: clamp(10px, calc(var(--label-font) * 0.95), 20px);
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .high-roll-item.winner {
+      border-color: rgba(255,218,90,0.8);
+      background: rgba(255,218,90,0.2);
+      color: #ffe9a3;
+    }
+
+    .life-input-wrap {
+      width: min(95%, 320px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .life-input-display {
+      width: 100%;
+      text-align: center;
+      font-size: clamp(24px, calc(var(--base-font) * 1.4), 68px);
+      font-weight: 800;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.16);
+      border-radius: 8px;
+      padding: 8px;
+      box-sizing: border-box;
+    }
+
+    .life-keypad {
+      width: 100%;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 7px;
+    }
+
+    .life-key {
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 8px;
+      min-height: 34px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: clamp(14px, var(--secondary-font), 30px);
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .life-key:active { background: rgba(255,255,255,0.24); }
+
+    /* Loading state */
+    .loading-state {
+      display: flex; align-items: center; justify-content: center;
+      height: 100%; width: 100%;
+      font-size: var(--secondary-font); opacity: 0.7;
+    }
+  </style>
+</head>
+<body>
+  <div class="widget-root" id="widgetRoot">
+    <div class="loading-state" id="loadingState">Loading...</div>
+
+    <div class="players-area" id="playersArea" style="display:none;"></div>
+
+    <div class="tools-panel" id="toolsPanel" style="display:none;">
+      <div class="tool-section">
+        <div class="tool-label">Players</div>
+        <div class="tool-value" id="playerCountDisplay">4</div>
+        <div class="tool-btn-row">
+          <div class="tool-btn" onclick="removePlayerConfirmed()">-</div>
+          <div class="tool-btn" onclick="addPlayerConfirmed()">+</div>
+        </div>
+      </div>
+
+      <div class="tool-section">
+        <div class="tool-label">View</div>
+        <div class="tool-btn-row">
+          <div class="tool-btn active" id="viewAllBtn" onclick="setViewMode('all')">All</div>
+          <div class="tool-btn" id="viewSingleBtn" onclick="setViewMode('single')">Single</div>
+        </div>
+        <div class="tool-btn-row">
+          <div class="tool-btn" onclick="focusPrevPlayer()">&lt;</div>
+          <div class="tool-btn" id="focusPlayerBtn" onclick="setViewMode('single')">P1</div>
+          <div class="tool-btn" onclick="focusNextPlayer()">&gt;</div>
+        </div>
+      </div>
+
+      <div class="tool-section">
+        <div class="tool-label">Dice</div>
+        <div class="dice-result" id="diceResult">--</div>
+        <div class="tool-btn-row">
+          <div class="tool-btn" onclick="rollDice(4)">D4</div>
+          <div class="tool-btn" onclick="rollDice(6)">D6</div>
+          <div class="tool-btn" onclick="rollDice(8)">D8</div>
+          <div class="tool-btn" onclick="rollDice(20)">D20</div>
+        </div>
+        <div class="tool-btn block" onclick="rollHighD20()">High Roll</div>
+      </div>
+
+      <div class="tool-section">
+        <div class="tool-label">Coin</div>
+        <div class="coin-result" id="coinResult">--</div>
+        <div class="tool-btn" onclick="flipCoin()" style="width:auto; padding:3px 12px;">Flip</div>
+      </div>
+
+      <div class="tool-section">
+        <div class="tool-label">Turn</div>
+        <div class="tool-value" id="turnCount">1</div>
+        <div class="tool-subvalue" id="turnTimer">00:00</div>
+        <div class="tool-subvalue" id="turnPlayerLabel">P1</div>
+        <div class="turn-indicator" id="turnIndicator"></div>
+        <div class="tool-btn" onclick="nextTurn()" style="width:auto; padding:3px 12px;">Next</div>
+      </div>
+
+      <div class="tool-section">
+        <div class="tool-label">Game Time</div>
+        <div class="tool-value" id="gameTimer">00:00</div>
+        <div class="tool-btn-row">
+          <div class="tool-btn" id="clockPauseBtn" onclick="toggleClockPause()">Pause</div>
+        </div>
+      </div>
+
+      <div class="tool-section" style="flex:0; padding:4% 8%;">
+        <div class="reset-btn" onclick="confirmReset()">Reset Game</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Counter Modal -->
+  <div class="counter-modal" id="counterModal" onclick="onModalBackdropClick(event)">
+    <div class="modal-title" id="modalTitle"></div>
+    <div class="modal-content-wrap" id="modalContent"></div>
+    <div class="modal-close" onclick="closeModal()">Close</div>
+  </div>
+
+  <script>
+    const EXTRA_COLORS = ['#b87924', '#c40016', '#2ed8ff', '#8bc34a', '#ff8a65', '#9c6dff'];
+    const COUNTER_KEYS = ['poison', 'energy', 'commanderTax', 'storm', 'mana', 'experience'];
+
+    // === STATE ===
+    const state = {
+      players: [],
+      currentTurn: 0,
+      turnNumber: 1,
+      numPlayers: 4,
+      startingLife: 40,
+      viewMode: 'all',
+      focusedPlayer: 0,
+      gameStartedAt: 0,
+      gamePausedMs: 0,
+      pauseStartedAt: 0,
+      isPaused: false,
+      turnStartedAt: 0,
+      playerTurnMs: [],
+      timerId: null
+    };
+
+    const holdState = { timer: null, interval: null, didLongPress: false };
+    const swipeState = { active: false, index: -1, x: 0, y: 0 };
+    const lifeInputState = { playerIndex: null, buffer: '0' };
+
+    function clamp(value, min, max) {
+      return Math.min(max, Math.max(min, value));
+    }
+
+    function createPlayer(index) {
+      return {
+        id: index,
+        name: 'Player ' + (index + 1),
+        life: state.startingLife,
+        alive: true,
+        partners: false,
+        poison: 0,
+        energy: 0,
+        commanderTax: 0,
+        storm: 0,
+        mana: 0,
+        experience: 0,
+        commanderDamage: {}
+      };
+    }
+
+    function initGame() {
+      const count = clamp(getPlayerCount(), 1, 10);
+      const mode = getGameMode();
+      state.numPlayers = count;
+      state.startingLife = mode === 'Commander' ? 40 : 20;
+      state.players = [];
+      for (let i = 0; i < count; i++) {
+        state.players.push(createPlayer(i));
+      }
+      state.playerTurnMs = new Array(count).fill(0);
+      state.currentTurn = 0;
+      state.turnNumber = 1;
+      state.viewMode = 'all';
+      state.focusedPlayer = 0;
+      state.gameStartedAt = Date.now();
+      state.gamePausedMs = 0;
+      state.pauseStartedAt = 0;
+      state.isPaused = false;
+      state.turnStartedAt = Date.now();
+      renderAll();
+      startTimers();
+    }
+
+    function getPlayerCount() {
+      if (typeof playerCount !== 'undefined') return parseInt(playerCount, 10) || 4;
+      return 4;
+    }
+
+    function getGameMode() {
+      if (typeof gameMode !== 'undefined') return gameMode;
+      return 'Commander';
+    }
+
+    function getPlayerColor(index) {
+      const colors = [
+        typeof player1Color !== 'undefined' ? player1Color : '#e74c3c',
+        typeof player2Color !== 'undefined' ? player2Color : '#3498db',
+        typeof player3Color !== 'undefined' ? player3Color : '#2ecc71',
+        typeof player4Color !== 'undefined' ? player4Color : '#f39c12'
+      ];
+      return colors[index] || EXTRA_COLORS[(index - colors.length) % EXTRA_COLORS.length];
+    }
+
+    // === RENDERING ===
+    function formatTime(ms) {
+      const totalSeconds = Math.max(0, Math.floor(ms / 1000));
+      const minutes = Math.floor(totalSeconds / 60);
+      const seconds = totalSeconds % 60;
+      return String(minutes).padStart(2, '0') + ':' + String(seconds).padStart(2, '0');
+    }
+
+    function renderAll() {
+      renderPlayers();
+      renderTurnIndicator();
+      renderPlayerCountDisplay();
+      renderViewControls();
+      renderClockDisplays();
+      document.getElementById('turnCount').textContent = String(state.turnNumber);
+    }
+
+    function getGridCols(count) {
+      if (count <= 2) return count;
+      if (count <= 4) return 2;
+      if (count <= 6) return 3;
+      if (count <= 9) return 3;
+      return 4;
+    }
+
+    function renderPlayerCountDisplay() {
+      document.getElementById('playerCountDisplay').textContent = String(state.numPlayers);
+    }
+
+    function renderViewControls() {
+      document.getElementById('viewAllBtn').classList.toggle('active', state.viewMode === 'all');
+      document.getElementById('viewSingleBtn').classList.toggle('active', state.viewMode === 'single');
+      document.getElementById('focusPlayerBtn').textContent = 'P' + (state.focusedPlayer + 1);
+    }
+
+    function renderPlayers() {
+      const area = document.getElementById('playersArea');
+      area.innerHTML = '';
+      const visible = state.viewMode === 'single'
+        ? [state.focusedPlayer]
+        : state.players.map((_, idx) => idx);
+
+      area.classList.toggle('single-view', state.viewMode === 'single');
+      area.style.setProperty('--player-cols', String(state.viewMode === 'single' ? 1 : getGridCols(visible.length)));
+
+      visible.forEach((i) => {
+        const p = state.players[i];
+        const color = getPlayerColor(i);
+        const card = document.createElement('div');
+        card.className = 'player-card';
+        card.id = 'player-' + i;
+
+        const isCommander = getGameMode() === 'Commander';
+        let commanderTotal = 0;
+        Object.keys(p.commanderDamage).forEach((k) => {
+          commanderTotal += p.commanderDamage[k] || 0;
+        });
+        const badgesHtml = `
+          <div class="counter-badges">
+            <div class="badge badge-poison" onclick="event.stopPropagation(); openCountersModal(${i})" title="Poison">
+              <span class="badge-icon">&#9762;</span>
+              <span>${p.poison}</span>
+            </div>
+            ${isCommander ? `
+            <div class="badge badge-commander" onclick="event.stopPropagation(); openCommanderModal(${i})" title="Commander Damage">
+              <span class="badge-icon">&#9876;</span>
+              <span>${commanderTotal}</span>
+            </div>` : ''}
+            <div class="badge badge-energy" onclick="event.stopPropagation(); openCountersModal(${i})" title="Energy">
+              <span class="badge-icon">&#9889;</span>
+              <span>${p.energy}</span>
+            </div>
+            <div class="badge badge-exp" onclick="event.stopPropagation(); openCountersModal(${i})" title="Experience">
+              <span class="badge-icon">&#10022;</span>
+              <span>${p.experience}</span>
+            </div>
+            ${p.partners ? '<div class="badge badge-partner"><span class="badge-icon">&#128101;</span><span>Partner</span></div>' : ''}
+          </div>
+        `;
+
+        const lifeControlsHtml = `
+          <div class="life-controls">
+            <div class="life-btn"
+                 onpointerdown="startLifeAdjust(${i}, -1, event)"
+                 onpointerup="endLifeAdjust(event)"
+                 onpointerleave="endLifeAdjust(event)"
+                 onpointercancel="endLifeAdjust(event)"
+                 onclick="tapLifeAdjust(${i}, -1, event)">-</div>
+            <div class="life-btn"
+                 onpointerdown="startLifeAdjust(${i}, 1, event)"
+                 onpointerup="endLifeAdjust(event)"
+                 onpointerleave="endLifeAdjust(event)"
+                 onpointercancel="endLifeAdjust(event)"
+                 onclick="tapLifeAdjust(${i}, 1, event)">+</div>
+          </div>
+        `;
+
+        card.innerHTML = `
+          <div class="player-card-bg" style="background:${color};"></div>
+          <div class="player-card-border" style="border-color:${color};"></div>
+          <div class="player-inner">
+            <div class="player-name" style="color:${color};">${p.name}</div>
+            <div class="life-total" id="life-${i}" onclick="event.stopPropagation(); openLifeInputModal(${i})">${p.life}</div>
+            ${lifeControlsHtml}
+            ${state.viewMode === 'single' ? '' : badgesHtml}
+            ${state.viewMode === 'single' ? '' : '<div class="swipe-hint">Swipe L/R: Commander | Swipe U/D: Options</div>'}
+          </div>
+          ${p.alive ? '' : '<div class="dead-overlay">KO</div>'}
+        `;
+        card.onpointerdown = (event) => onCardPointerDown(i, event);
+        card.onpointerup = (event) => onCardPointerUp(i, event);
+        card.onpointercancel = clearCardSwipe;
+        area.appendChild(card);
+      });
+    }
+
+    function renderTurnIndicator() {
+      const el = document.getElementById('turnIndicator');
+      el.innerHTML = '';
+      for (let i = 0; i < state.numPlayers; i++) {
+        const dot = document.createElement('div');
+        dot.className = 'turn-dot' + (i === state.currentTurn ? ' active' : '');
+        dot.style.background = getPlayerColor(i);
+        dot.onclick = () => setCurrentTurn(i, false, false);
+        el.appendChild(dot);
+      }
+      highlightActivePlayer();
+    }
+
+    function highlightActivePlayer() {
+      state.players.forEach((_, i) => {
+        const card = document.getElementById('player-' + i);
+        if (!card) return;
+        const border = card.querySelector('.player-card-border');
+        if (i === state.currentTurn) {
+          border.style.borderColor = getPlayerColor(i);
+          border.style.borderWidth = '3px';
+          border.style.boxShadow = '0 0 12px ' + getPlayerColor(i) + '66';
+        } else {
+          border.style.borderColor = 'rgba(255,255,255,0.15)';
+          border.style.borderWidth = '2px';
+          border.style.boxShadow = 'none';
+        }
+      });
+    }
+
+    function onCardPointerDown(index, event) {
+      if (!event || typeof event.clientX !== 'number' || typeof event.clientY !== 'number') return;
+      swipeState.active = true;
+      swipeState.index = index;
+      swipeState.x = event.clientX;
+      swipeState.y = event.clientY;
+    }
+
+    function onCardPointerUp(index, event) {
+      if (!swipeState.active || swipeState.index !== index || !event) return;
+      const dx = event.clientX - swipeState.x;
+      const dy = event.clientY - swipeState.y;
+      const absX = Math.abs(dx);
+      const absY = Math.abs(dy);
+      clearCardSwipe();
+      if (Math.max(absX, absY) < 48) return;
+      if (absX > absY) {
+        if (getGameMode() === 'Commander') openCommanderModal(index);
+      } else {
+        openPlayerActionsModal(index);
+      }
+    }
+
+    function clearCardSwipe() {
+      swipeState.active = false;
+      swipeState.index = -1;
+      swipeState.x = 0;
+      swipeState.y = 0;
+    }
+
+    // === LIFE ===
+    function startLifeAdjust(playerIndex, delta, event) {
+      if (event) event.stopPropagation();
+      endLifeAdjust();
+      holdState.didLongPress = false;
+      holdState.timer = setTimeout(() => {
+        holdState.didLongPress = true;
+        changeLife(playerIndex, delta * 10);
+        holdState.interval = setInterval(() => changeLife(playerIndex, delta * 10), 170);
+      }, 430);
+    }
+
+    function endLifeAdjust(event) {
+      if (event) event.stopPropagation();
+      if (holdState.timer) clearTimeout(holdState.timer);
+      if (holdState.interval) clearInterval(holdState.interval);
+      holdState.timer = null;
+      holdState.interval = null;
+    }
+
+    function tapLifeAdjust(playerIndex, delta, event) {
+      if (event) event.stopPropagation();
+      if (holdState.didLongPress) {
+        holdState.didLongPress = false;
+        return;
+      }
+      changeLife(playerIndex, delta);
+    }
+
+    function changeLife(playerIndex, delta) {
+      if (!state.players[playerIndex]) return;
+      state.players[playerIndex].life += delta;
+      const el = document.getElementById('life-' + playerIndex);
+      if (el) {
+        el.textContent = state.players[playerIndex].life;
+        el.classList.add('changed');
+        setTimeout(() => el.classList.remove('changed'), 150);
+      } else {
+        renderPlayers();
+      }
+    }
+
+    function setViewMode(mode) {
+      if (mode !== 'all' && mode !== 'single') return;
+      state.viewMode = mode;
+      renderPlayers();
+      renderViewControls();
+    }
+
+    function focusPrevPlayer() {
+      state.focusedPlayer = (state.focusedPlayer - 1 + state.numPlayers) % state.numPlayers;
+      if (state.viewMode === 'single') renderPlayers();
+      renderViewControls();
+    }
+
+    function focusNextPlayer() {
+      state.focusedPlayer = (state.focusedPlayer + 1) % state.numPlayers;
+      if (state.viewMode === 'single') renderPlayers();
+      renderViewControls();
+    }
+
+    function addPlayerConfirmed() {
+      if (state.numPlayers >= 10) return;
+      const newCount = state.numPlayers + 1;
+      if (!window.confirm('Add Player ' + newCount + '?')) return;
+      state.players.push(createPlayer(state.players.length));
+      state.playerTurnMs.push(0);
+      state.numPlayers = state.players.length;
+      renderAll();
+    }
+
+    function removePlayerConfirmed() {
+      if (state.numPlayers <= 1) return;
+      if (!window.confirm('Remove Player ' + state.numPlayers + '?')) return;
+      const removed = state.numPlayers - 1;
+      state.players.pop();
+      state.playerTurnMs.pop();
+      state.numPlayers = state.players.length;
+      if (state.currentTurn >= state.numPlayers) state.currentTurn = 0;
+      if (state.focusedPlayer >= state.numPlayers) state.focusedPlayer = state.numPlayers - 1;
+      state.players.forEach((p) => delete p.commanderDamage[removed]);
+      renderAll();
+    }
+
+    // === DICE ===
+    function rollDice(sides) {
+      const result = Math.floor(Math.random() * sides) + 1;
+      const el = document.getElementById('diceResult');
+      el.textContent = result;
+      el.classList.remove('rolling');
+      void el.offsetWidth;
+      el.classList.add('rolling');
+      setTimeout(() => el.classList.remove('rolling'), 400);
+    }
+
+    function rollHighD20() {
+      const rolls = state.players.map(() => Math.floor(Math.random() * 20) + 1);
+      const max = Math.max.apply(null, rolls);
+      const winners = [];
+      let html = '<div class="high-roll-grid">';
+      rolls.forEach((value, idx) => {
+        if (value === max) winners.push(idx);
+        html += `<div class="high-roll-item${value === max ? ' winner' : ''}" style="border-left:4px solid ${getPlayerColor(idx)};"><span>P${idx + 1}</span><span>${value}</span></div>`;
+      });
+      html += '</div>';
+      openModal('High Roll D20', html);
+      document.getElementById('diceResult').textContent = String(max);
+      if (winners.length === 1) setCurrentTurn(winners[0], true, false);
+    }
+
+    // === COIN ===
+    function flipCoin() {
+      const result = Math.random() < 0.5 ? 'Heads' : 'Tails';
+      const el = document.getElementById('coinResult');
+      el.textContent = result;
+      el.style.color = result === 'Heads' ? '#f1c40f' : '#95a5a6';
+      el.classList.remove('flipping');
+      void el.offsetWidth;
+      el.classList.add('flipping');
+      setTimeout(() => el.classList.remove('flipping'), 500);
+    }
+
+    // === TURN TRACKER ===
+    function captureTurnTime(now) {
+      if (state.isPaused) return;
+      state.playerTurnMs[state.currentTurn] += now - state.turnStartedAt;
+      state.turnStartedAt = now;
+    }
+
+    function setCurrentTurn(index, fromHighRoll, shouldAdvanceRound) {
+      if (index < 0 || index >= state.numPlayers) return;
+      const now = Date.now();
+      captureTurnTime(now);
+      const previous = state.currentTurn;
+      state.currentTurn = index;
+      if (shouldAdvanceRound && index <= previous && !fromHighRoll) {
+        state.turnNumber++;
+        document.getElementById('turnCount').textContent = state.turnNumber;
+      }
+      state.turnStartedAt = now;
+      renderTurnIndicator();
+      renderClockDisplays();
+    }
+
+    function nextTurn() {
+      setCurrentTurn((state.currentTurn + 1) % state.numPlayers, false, true);
+    }
+
+    function getGameElapsedMs() {
+      if (state.isPaused) return state.pauseStartedAt - state.gameStartedAt - state.gamePausedMs;
+      return Date.now() - state.gameStartedAt - state.gamePausedMs;
+    }
+
+    function getCurrentTurnElapsedMs() {
+      const base = state.playerTurnMs[state.currentTurn] || 0;
+      if (state.isPaused) return base;
+      return base + (Date.now() - state.turnStartedAt);
+    }
+
+    function renderClockDisplays() {
+      document.getElementById('gameTimer').textContent = formatTime(getGameElapsedMs());
+      document.getElementById('turnTimer').textContent = formatTime(getCurrentTurnElapsedMs());
+      document.getElementById('turnPlayerLabel').textContent = 'P' + (state.currentTurn + 1);
+      document.getElementById('clockPauseBtn').textContent = state.isPaused ? 'Resume' : 'Pause';
+    }
+
+    function toggleClockPause() {
+      const now = Date.now();
+      if (!state.isPaused) {
+        captureTurnTime(now);
+        state.isPaused = true;
+        state.pauseStartedAt = now;
+      } else {
+        state.gamePausedMs += now - state.pauseStartedAt;
+        state.pauseStartedAt = 0;
+        state.isPaused = false;
+        state.turnStartedAt = now;
+      }
+      renderClockDisplays();
+    }
+
+    function startTimers() {
+      if (state.timerId) clearInterval(state.timerId);
+      state.timerId = setInterval(renderClockDisplays, 250);
+    }
+
+    // === MODALS ===
+    function openModal(title, contentHtml) {
+      document.getElementById('modalTitle').textContent = title;
+      document.getElementById('modalContent').innerHTML = contentHtml;
+      document.getElementById('counterModal').classList.add('visible');
+    }
+
+    function closeModal() {
+      document.getElementById('counterModal').classList.remove('visible');
+    }
+
+    function onModalBackdropClick(event) {
+      if (event && event.target && event.target.id === 'counterModal') closeModal();
+    }
+
+    function openCountersModal(playerIndex) {
+      const p = state.players[playerIndex];
+      let html = '';
+      COUNTER_KEYS.forEach((key) => {
+        const label = key === 'commanderTax'
+          ? 'Commander Tax'
+          : key.charAt(0).toUpperCase() + key.slice(1);
+        const value = p[key] || 0;
+        html += `
+          <div class="modal-counter-row">
+            <div class="modal-counter-label">${label}</div>
+            <div class="modal-btn" onclick="changeCounter(${playerIndex}, '${key}', -1)">-</div>
+            <div class="modal-counter-value" id="counter-${playerIndex}-${key}">${value}</div>
+            <div class="modal-btn" onclick="changeCounter(${playerIndex}, '${key}', 1)">+</div>
+          </div>
+        `;
+      });
+      openModal(p.name + ' Counters', html);
+    }
+
+    function changeCounter(playerIndex, key, delta) {
+      const p = state.players[playerIndex];
+      if (!p || typeof p[key] !== 'number') return;
+      p[key] = Math.max(0, p[key] + delta);
+      const modalEl = document.getElementById('counter-' + playerIndex + '-' + key);
+      if (modalEl) modalEl.textContent = p[key];
+      renderPlayers();
+    }
+
+    function openCommanderModal(playerIndex) {
+      const p = state.players[playerIndex];
+      let html = '<div class="cmdr-damage-grid">';
+      state.players.forEach((other, j) => {
+        if (j === playerIndex) return;
+        const dmg = p.commanderDamage[j] || 0;
+        html += `
+          <div class="cmdr-damage-item">
+            <div class="cmdr-from-label" style="color:${getPlayerColor(j)};">P${j + 1}</div>
+            <div class="cmdr-dmg-btn" onclick="changeCmdrDmg(${playerIndex}, ${j}, -1)">-</div>
+            <div class="cmdr-dmg-value" id="cmdr-${playerIndex}-${j}">${dmg}</div>
+            <div class="cmdr-dmg-btn" onclick="changeCmdrDmg(${playerIndex}, ${j}, 1)">+</div>
+          </div>
+        `;
+      });
+      html += '</div>';
+      openModal(p.name + ' - Commander Damage', html);
+    }
+
+    function changeCmdrDmg(toPlayer, fromPlayer, delta) {
+      const p = state.players[toPlayer];
+      if (!p.commanderDamage[fromPlayer]) p.commanderDamage[fromPlayer] = 0;
+      p.commanderDamage[fromPlayer] = Math.max(0, p.commanderDamage[fromPlayer] + delta);
+      const el = document.getElementById('cmdr-' + toPlayer + '-' + fromPlayer);
+      if (el) el.textContent = p.commanderDamage[fromPlayer];
+      renderPlayers();
+    }
+
+    function openPlayerActionsModal(playerIndex) {
+      const p = state.players[playerIndex];
+      const html = `
+        <div class="quick-actions">
+          <div class="quick-btn" onclick="togglePlayerAlive(${playerIndex})">${p.alive ? 'Kill' : 'Unkill'} Player</div>
+          <div class="quick-btn" onclick="togglePlayerPartners(${playerIndex})">${p.partners ? 'Disable' : 'Enable'} Partners</div>
+          <div class="quick-btn" onclick="openCountersModal(${playerIndex})">Counters</div>
+          ${getGameMode() === 'Commander'
+            ? `<div class="quick-btn" onclick="openCommanderModal(${playerIndex})">Commander Damage</div>`
+            : `<div class="quick-btn" onclick="openLifeInputModal(${playerIndex})">Life Keypad</div>`}
+          <div class="quick-btn" onclick="state.focusedPlayer=${playerIndex}; setViewMode('single'); closeModal();">Focus P${playerIndex + 1}</div>
+          <div class="quick-btn" onclick="setCurrentTurn(${playerIndex}, false, false); closeModal();">Set Turn P${playerIndex + 1}</div>
+        </div>
+      `;
+      openModal(p.name + ' Options', html);
+    }
+
+    function togglePlayerAlive(playerIndex) {
+      state.players[playerIndex].alive = !state.players[playerIndex].alive;
+      renderPlayers();
+      openPlayerActionsModal(playerIndex);
+    }
+
+    function togglePlayerPartners(playerIndex) {
+      state.players[playerIndex].partners = !state.players[playerIndex].partners;
+      renderPlayers();
+      openPlayerActionsModal(playerIndex);
+    }
+
+    function openLifeInputModal(playerIndex) {
+      lifeInputState.playerIndex = playerIndex;
+      lifeInputState.buffer = String(state.players[playerIndex].life);
+      const html = `
+        <div class="life-input-wrap">
+          <div class="life-input-display" id="lifeInputDisplay">${lifeInputState.buffer}</div>
+          <div class="life-keypad">
+            <div class="life-key" onclick="appendLifeDigit('1')">1</div><div class="life-key" onclick="appendLifeDigit('2')">2</div><div class="life-key" onclick="appendLifeDigit('3')">3</div>
+            <div class="life-key" onclick="appendLifeDigit('4')">4</div><div class="life-key" onclick="appendLifeDigit('5')">5</div><div class="life-key" onclick="appendLifeDigit('6')">6</div>
+            <div class="life-key" onclick="appendLifeDigit('7')">7</div><div class="life-key" onclick="appendLifeDigit('8')">8</div><div class="life-key" onclick="appendLifeDigit('9')">9</div>
+            <div class="life-key" onclick="toggleLifeSign()">+/-</div><div class="life-key" onclick="appendLifeDigit('0')">0</div><div class="life-key" onclick="backspaceLifeDigit()">&#9003;</div>
+          </div>
+          <div class="tool-btn-row">
+            <div class="tool-btn" onclick="clearLifeInput()">Clear</div>
+            <div class="tool-btn active" onclick="applyLifeInput()">Set Life</div>
+          </div>
+        </div>
+      `;
+      openModal(state.players[playerIndex].name + ' Life Input', html);
+    }
+
+    function refreshLifeInput() {
+      const el = document.getElementById('lifeInputDisplay');
+      if (el) el.textContent = lifeInputState.buffer || '0';
+    }
+
+    function appendLifeDigit(digit) {
+      if (!/^\d$/.test(digit)) return;
+      if (lifeInputState.buffer === '0') lifeInputState.buffer = digit;
+      else if (lifeInputState.buffer === '-0') lifeInputState.buffer = '-' + digit;
+      else lifeInputState.buffer += digit;
+      refreshLifeInput();
+    }
+
+    function backspaceLifeDigit() {
+      lifeInputState.buffer = lifeInputState.buffer.slice(0, -1);
+      if (!lifeInputState.buffer || lifeInputState.buffer === '-') lifeInputState.buffer = '0';
+      refreshLifeInput();
+    }
+
+    function clearLifeInput() {
+      lifeInputState.buffer = '0';
+      refreshLifeInput();
+    }
+
+    function toggleLifeSign() {
+      if (!lifeInputState.buffer || lifeInputState.buffer === '0') return;
+      lifeInputState.buffer = lifeInputState.buffer.startsWith('-')
+        ? lifeInputState.buffer.slice(1)
+        : '-' + lifeInputState.buffer;
+      refreshLifeInput();
+    }
+
+    function applyLifeInput() {
+      const value = parseInt(lifeInputState.buffer, 10);
+      if (!Number.isFinite(value)) return;
+      if (lifeInputState.playerIndex === null || !state.players[lifeInputState.playerIndex]) return;
+      state.players[lifeInputState.playerIndex].life = value;
+      renderPlayers();
+      closeModal();
+    }
+
+    // === RESET ===
+    function confirmReset() {
+      if (!window.confirm('Reset game and all counters?')) return;
+      initGame();
+      document.getElementById('diceResult').textContent = '--';
+      document.getElementById('coinResult').textContent = '--';
+      document.getElementById('coinResult').style.color = '';
+    }
+
+    // === iCUE INTEGRATION ===
+    function applyStyles() {
+      const root = document.documentElement;
+      const t = Number(typeof transparency !== 'undefined' ? transparency : 100);
+      root.style.setProperty('--transparency', Number.isFinite(t) ? t / 100 : 1);
+      root.style.setProperty('--text-color', typeof textColor !== 'undefined' ? textColor : '#ffffff');
+      root.style.setProperty('--accent-color', typeof accentColor !== 'undefined' ? accentColor : '#c8a2ff');
+      root.style.setProperty('--bg-color', typeof backgroundColor !== 'undefined' ? backgroundColor : '#1a1a2e');
+      root.style.setProperty('--p1-color', typeof player1Color !== 'undefined' ? player1Color : '#e74c3c');
+      root.style.setProperty('--p2-color', typeof player2Color !== 'undefined' ? player2Color : '#3498db');
+      root.style.setProperty('--p3-color', typeof player3Color !== 'undefined' ? player3Color : '#2ecc71');
+      root.style.setProperty('--p4-color', typeof player4Color !== 'undefined' ? player4Color : '#f39c12');
+    }
+
+    function showState(stateName) {
+      document.getElementById('loadingState').style.display = stateName === 'loading' ? '' : 'none';
+      document.getElementById('playersArea').style.display = stateName === 'content' ? '' : 'none';
+      document.getElementById('toolsPanel').style.display = stateName === 'content' ? '' : 'none';
+    }
+
+    function updateWidget() {
+      applyStyles();
+      initGame();
+      showState('content');
+    }
+
+    // Track previous settings to detect changes
+    let prevPlayerCount = null;
+    let prevGameMode = null;
+
+    function onIcueDataUpdated() {
+      applyStyles();
+      const newCount = clamp(getPlayerCount(), 1, 10);
+      const newMode = getGameMode();
+      if (newCount !== prevPlayerCount || newMode !== prevGameMode) {
+        prevPlayerCount = newCount;
+        prevGameMode = newMode;
+        initGame();
+        showState('content');
+      } else {
+        renderAll();
+      }
+    }
+
+    function onIcueInitialized() {
+      onIcueDataUpdated();
+    }
+
+    document.addEventListener('pointerup', endLifeAdjust);
+    document.addEventListener('pointercancel', endLifeAdjust);
+
+    // iCUE API binding
+    if (typeof window !== 'undefined') {
+      window.icueEvents = {
+        'onDataUpdated': onIcueDataUpdated,
+        'onICUEInitialized': onIcueInitialized
+      };
+    }
+
+    // Browser fallback
+    if (typeof iCUE_initialized !== 'undefined' && iCUE_initialized) {
+      onIcueInitialized();
+    } else {
+      updateWidget();
+    }
+  </script>
+</body>
+</html>
