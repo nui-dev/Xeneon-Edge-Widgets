@@ -197,6 +197,13 @@
     .badge:active { background: rgba(255,255,255,0.15); }
 
     .badge-icon { opacity: 0.7; }
+    .badge-icon-img {
+      width: 14px;
+      height: 14px;
+      object-fit: contain;
+      opacity: 0.95;
+      display: block;
+    }
     .badge-poison { color: #a8e6a3; }
     .badge-commander { color: #ffcc80; }
     .badge-energy { color: #81d4fa; }
@@ -224,43 +231,51 @@
 
     /* === TOOLS PANEL === */
     .tools-panel {
-      width: clamp(100px, 14%, 220px);
+      width: clamp(118px, 17%, 260px);
       display: flex; flex-direction: column;
-      gap: 0.8%;
+      gap: 1.05%;
       flex-shrink: 0;
     }
 
     .tool-section {
-      background: rgba(255,255,255,0.06);
-      border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 10px;
-      padding: 6% 8%;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.05) 100%),
+        rgba(26, 30, 44, 0.88);
+      border: 1px solid rgba(255,255,255,0.14);
+      border-radius: 14px;
+      padding: 6.5% 8.5%;
       display: flex; flex-direction: column;
       align-items: center;
-      gap: 6px;
+      gap: 8px;
       flex: 1;
       min-height: 0;
       justify-content: center;
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.09),
+        0 8px 20px rgba(0,0,0,0.25);
     }
 
     .tool-label {
-      font-size: clamp(8px, calc(var(--label-font) * 0.85), 18px);
+      font-size: clamp(8px, calc(var(--label-font) * 0.87), 18px);
       text-transform: uppercase;
-      letter-spacing: 1px;
-      opacity: 0.6;
+      letter-spacing: 1.1px;
+      opacity: 0.74;
+      font-weight: 700;
       text-align: center;
     }
 
     .tool-value {
       font-size: clamp(16px, calc(var(--base-font) * 1.2), 60px);
-      font-weight: 700;
-      line-height: 1.1;
+      font-weight: 800;
+      line-height: 1;
       color: var(--accent-color);
+      text-shadow: 0 2px 10px rgba(160,120,255,0.28);
     }
 
     .tool-subvalue {
       font-size: clamp(9px, calc(var(--label-font) * 0.85), 18px);
-      opacity: 0.85;
+      opacity: 0.92;
+      color: rgba(255,255,255,0.93);
       text-align: center;
     }
 
@@ -268,26 +283,42 @@
       display: flex; gap: 6px;
       flex-wrap: wrap;
       justify-content: center;
+      width: 100%;
     }
 
     .tool-btn {
-      background: rgba(255,255,255,0.1);
-      border: 1px solid rgba(255,255,255,0.15);
-      border-radius: 6px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.18), rgba(255,255,255,0.09));
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 8px;
       color: var(--text-color);
       font-size: clamp(8px, calc(var(--label-font) * 0.85), 16px);
-      font-weight: 600;
-      padding: 3px 7px;
+      font-weight: 700;
+      padding: 4px 8px;
+      min-height: 30px;
+      min-width: 0;
+      flex: 1 1 42px;
       cursor: pointer;
       transition: background 0.15s, transform 0.1s;
       touch-action: manipulation;
       white-space: nowrap;
+      text-align: center;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.16);
     }
 
-    .tool-btn:hover { background: rgba(255,255,255,0.2); }
-    .tool-btn:active { transform: scale(0.92); }
-    .tool-btn.active { background: var(--accent-color); color: #000; }
-    .tool-btn.block { width: 100%; text-align: center; }
+    .tool-btn:hover { background: linear-gradient(180deg, rgba(255,255,255,0.24), rgba(255,255,255,0.12)); }
+    .tool-btn:active { transform: scale(0.95); }
+    .tool-btn.active {
+      background: linear-gradient(180deg, #d6b3ff, var(--accent-color));
+      border-color: rgba(255,255,255,0.35);
+      color: #1a1430;
+      box-shadow: 0 0 12px rgba(199,144,255,0.35), inset 0 1px 0 rgba(255,255,255,0.35);
+    }
+    .tool-btn.block {
+      width: 100%;
+      text-align: center;
+      flex: 1 1 100%;
+      min-height: 34px;
+    }
 
     .dice-result {
       font-size: clamp(20px, calc(var(--base-font) * 1.5), 72px);
@@ -329,6 +360,7 @@
     .turn-indicator {
       display: flex; gap: 4px;
       align-items: center;
+      justify-content: center;
     }
 
     .turn-dot {
@@ -338,24 +370,30 @@
       opacity: 0.3;
       transition: opacity 0.2s, transform 0.2s;
       cursor: pointer;
+      border: 1px solid rgba(255,255,255,0.35);
     }
 
     .turn-dot.active { opacity: 1; transform: scale(1.3); }
+    .turn-dot.dead {
+      opacity: 0.16;
+      filter: grayscale(1);
+    }
 
     /* Reset button */
     .reset-btn {
-      background: rgba(231,76,60,0.2);
-      border: 1px solid rgba(231,76,60,0.4);
-      border-radius: 8px;
-      color: #e74c3c;
+      background: linear-gradient(180deg, rgba(255,111,97,0.26), rgba(170,38,38,0.26));
+      border: 1px solid rgba(255,113,97,0.5);
+      border-radius: 10px;
+      color: #ff5f52;
       font-size: clamp(8px, calc(var(--label-font) * 0.85), 16px);
-      font-weight: 600;
-      padding: 5px 10px;
+      font-weight: 700;
+      padding: 7px 10px;
       cursor: pointer;
       transition: background 0.15s;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.8px;
       width: 100%;
+      text-shadow: 0 1px 6px rgba(255,40,0,0.25);
     }
 
     .reset-btn:hover { background: rgba(231,76,60,0.35); }
@@ -367,6 +405,7 @@
       position: fixed; inset: 0;
       background: rgba(0,0,0,0.85);
       z-index: 100;
+      color: #ffffff;
       flex-direction: column;
       align-items: center;
       justify-content: center;
@@ -390,6 +429,7 @@
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 1px;
+      color: #ffffff;
     }
 
     .modal-counter-row {
@@ -401,6 +441,7 @@
       opacity: 0.7;
       min-width: 120px;
       text-align: right;
+      color: #ffffff;
     }
 
     .modal-counter-value {
@@ -408,6 +449,7 @@
       font-weight: 700;
       min-width: 60px;
       text-align: center;
+      color: #ffffff;
     }
 
     .modal-btn {
@@ -440,6 +482,39 @@
 
     .modal-close:hover { background: rgba(255,255,255,0.15); }
 
+    .history-list {
+      width: min(94%, 760px);
+      max-height: 58vh;
+      overflow: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .history-item {
+      display: grid;
+      grid-template-columns: 64px 1fr;
+      gap: 10px;
+      align-items: start;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.14);
+      border-radius: 8px;
+      padding: 8px 10px;
+      font-size: clamp(9px, calc(var(--label-font) * 0.9), 18px);
+      color: #ffffff;
+    }
+
+    .history-time {
+      opacity: 0.75;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .history-text {
+      opacity: 0.95;
+      line-height: 1.25;
+    }
+
     /* Commander damage grid */
     .cmdr-damage-grid {
       display: grid;
@@ -459,6 +534,7 @@
       font-size: clamp(8px, calc(var(--label-font) * 0.9), 18px);
       opacity: 0.6;
       min-width: 40px;
+      color: #ffffff;
     }
 
     .cmdr-dmg-value {
@@ -466,6 +542,7 @@
       font-weight: 700;
       min-width: 30px;
       text-align: center;
+      color: #ffffff;
     }
 
     .cmdr-dmg-btn {
@@ -496,6 +573,7 @@
       border-radius: 8px;
       padding: 8px;
       font-size: clamp(9px, calc(var(--label-font) * 0.85), 18px);
+      color: #ffffff;
       text-transform: uppercase;
       text-align: center;
       cursor: pointer;
@@ -521,6 +599,7 @@
       justify-content: space-between;
       font-size: clamp(10px, calc(var(--label-font) * 0.95), 20px);
       font-weight: 700;
+      color: #ffffff;
       text-transform: uppercase;
     }
 
@@ -543,6 +622,7 @@
       text-align: center;
       font-size: clamp(24px, calc(var(--base-font) * 1.4), 68px);
       font-weight: 800;
+      color: #ffffff;
       background: rgba(255,255,255,0.08);
       border: 1px solid rgba(255,255,255,0.16);
       border-radius: 8px;
@@ -567,6 +647,7 @@
       justify-content: center;
       font-size: clamp(14px, var(--secondary-font), 30px);
       font-weight: 700;
+      color: #ffffff;
       cursor: pointer;
     }
 
@@ -639,8 +720,10 @@
       <div class="tool-section">
         <div class="tool-label">Game Time</div>
         <div class="tool-value" id="gameTimer">00:00</div>
+        <div class="tool-subvalue" id="gameStatus">In Progress</div>
         <div class="tool-btn-row">
           <div class="tool-btn" id="clockPauseBtn" onclick="toggleClockPause()">Pause</div>
+          <div class="tool-btn" onclick="openHistoryModal()">History</div>
         </div>
       </div>
 
@@ -676,7 +759,10 @@
       isPaused: false,
       turnStartedAt: 0,
       playerTurnMs: [],
-      timerId: null
+      timerId: null,
+      gameEnded: false,
+      winnerIndex: null,
+      history: []
     };
 
     const holdState = { timer: null, interval: null, didLongPress: false };
@@ -723,6 +809,10 @@
       state.pauseStartedAt = 0;
       state.isPaused = false;
       state.turnStartedAt = Date.now();
+      state.gameEnded = false;
+      state.winnerIndex = null;
+      state.history = [];
+      logHistory('Game started (' + state.numPlayers + ' players, ' + getGameMode() + ').');
       renderAll();
       startTimers();
     }
@@ -755,12 +845,109 @@
       return String(minutes).padStart(2, '0') + ':' + String(seconds).padStart(2, '0');
     }
 
+    function formatHistoryTime(ts) {
+      const elapsed = Math.max(0, ts - state.gameStartedAt - state.gamePausedMs);
+      return formatTime(elapsed);
+    }
+
+    function logHistory(text) {
+      state.history.push({ ts: Date.now(), text: text });
+      if (state.history.length > 200) state.history.shift();
+    }
+
+    function getAliveIndexes() {
+      const indexes = [];
+      state.players.forEach((p, idx) => { if (p.alive) indexes.push(idx); });
+      return indexes;
+    }
+
+    function getNextAliveIndex(fromIndex) {
+      if (state.numPlayers <= 0) return -1;
+      for (let step = 1; step <= state.numPlayers; step++) {
+        const idx = (fromIndex + step) % state.numPlayers;
+        if (state.players[idx] && state.players[idx].alive) return idx;
+      }
+      return -1;
+    }
+
+    function setGameStatusText() {
+      const statusEl = document.getElementById('gameStatus');
+      if (!statusEl) return;
+      if (!state.gameEnded) {
+        statusEl.textContent = 'In Progress';
+        return;
+      }
+      if (state.winnerIndex === null) {
+        statusEl.textContent = 'Game Over';
+        return;
+      }
+      statusEl.textContent = 'Winner: P' + (state.winnerIndex + 1);
+    }
+
+    function endGameIfNeeded() {
+      if (state.gameEnded) return;
+      const alive = getAliveIndexes();
+      if (alive.length > 1) return;
+      state.gameEnded = true;
+      state.winnerIndex = alive.length === 1 ? alive[0] : null;
+      if (state.winnerIndex !== null) {
+        logHistory('Game Over. ' + state.players[state.winnerIndex].name + ' wins.');
+        openModal('Game Over', '<div class="tool-subvalue">' + state.players[state.winnerIndex].name + ' wins.</div>');
+      } else {
+        logHistory('Game Over. No players remaining.');
+        openModal('Game Over', '<div class="tool-subvalue">No players remaining.</div>');
+      }
+      setGameStatusText();
+    }
+
+    function eliminatePlayer(playerIndex, reason) {
+      const p = state.players[playerIndex];
+      if (!p || !p.alive) return;
+      p.alive = false;
+      logHistory(p.name + ' is out (' + reason + ').');
+
+      if (playerIndex === state.currentTurn) {
+        const nextAlive = getNextAliveIndex(playerIndex);
+        if (nextAlive !== -1) state.currentTurn = nextAlive;
+      }
+      renderTurnIndicator();
+      renderPlayers();
+      endGameIfNeeded();
+    }
+
+    function evaluateEliminationByState(playerIndex, trigger) {
+      const p = state.players[playerIndex];
+      if (!p || !p.alive) return;
+
+      if (p.life <= 0) {
+        eliminatePlayer(playerIndex, 'life reached 0');
+        return;
+      }
+      if (p.poison >= 10) {
+        eliminatePlayer(playerIndex, '10 poison counters');
+        return;
+      }
+      if (getGameMode() === 'Commander') {
+        const keys = Object.keys(p.commanderDamage);
+        for (let i = 0; i < keys.length; i++) {
+          const from = parseInt(keys[i], 10);
+          const dmg = p.commanderDamage[from] || 0;
+          if (dmg >= 21) {
+            eliminatePlayer(playerIndex, '21 commander damage from P' + (from + 1));
+            return;
+          }
+        }
+      }
+      if (trigger === 'manual') setGameStatusText();
+    }
+
     function renderAll() {
       renderPlayers();
       renderTurnIndicator();
       renderPlayerCountDisplay();
       renderViewControls();
       renderClockDisplays();
+      setGameStatusText();
       document.getElementById('turnCount').textContent = String(state.turnNumber);
     }
 
@@ -807,23 +994,23 @@
         const badgesHtml = `
           <div class="counter-badges">
             <div class="badge badge-poison" onclick="event.stopPropagation(); openCountersModal(${i})" title="Poison">
-              <span class="badge-icon">&#9762;</span>
+              <img class="badge-icon-img" src="images/mtg_icon_poison.svg" alt="Poison">
               <span>${p.poison}</span>
             </div>
             ${isCommander ? `
             <div class="badge badge-commander" onclick="event.stopPropagation(); openCommanderModal(${i})" title="Commander Damage">
-              <span class="badge-icon">&#9876;</span>
+              <img class="badge-icon-img" src="images/mtg_icon_commander.svg" alt="Commander">
               <span>${commanderTotal}</span>
             </div>` : ''}
             <div class="badge badge-energy" onclick="event.stopPropagation(); openCountersModal(${i})" title="Energy">
-              <span class="badge-icon">&#9889;</span>
+              <img class="badge-icon-img" src="images/mtg_icon_energy.svg" alt="Energy">
               <span>${p.energy}</span>
             </div>
             <div class="badge badge-exp" onclick="event.stopPropagation(); openCountersModal(${i})" title="Experience">
-              <span class="badge-icon">&#10022;</span>
+              <img class="badge-icon-img" src="images/mtg_icon_experience.svg" alt="Experience">
               <span>${p.experience}</span>
             </div>
-            ${p.partners ? '<div class="badge badge-partner"><span class="badge-icon">&#128101;</span><span>Partner</span></div>' : ''}
+            ${p.partners ? '<div class="badge badge-partner"><img class="badge-icon-img" src="images/mtg_icon_partner.svg" alt="Partner"><span>Partner</span></div>' : ''}
           </div>
         `;
 
@@ -868,7 +1055,7 @@
       el.innerHTML = '';
       for (let i = 0; i < state.numPlayers; i++) {
         const dot = document.createElement('div');
-        dot.className = 'turn-dot' + (i === state.currentTurn ? ' active' : '');
+        dot.className = 'turn-dot' + (i === state.currentTurn ? ' active' : '') + (state.players[i] && !state.players[i].alive ? ' dead' : '');
         dot.style.background = getPlayerColor(i);
         dot.onclick = () => setCurrentTurn(i, false, false);
         el.appendChild(dot);
@@ -953,16 +1140,23 @@
     }
 
     function changeLife(playerIndex, delta) {
-      if (!state.players[playerIndex]) return;
-      state.players[playerIndex].life += delta;
+      if (state.gameEnded) return;
+      const player = state.players[playerIndex];
+      if (!player || !player.alive) return;
+      const before = player.life;
+      player.life += delta;
+      if (delta < 0) {
+        logHistory(player.name + ' lost ' + Math.abs(delta) + ' life (' + before + ' -> ' + player.life + ').');
+      }
       const el = document.getElementById('life-' + playerIndex);
       if (el) {
-        el.textContent = state.players[playerIndex].life;
+        el.textContent = player.life;
         el.classList.add('changed');
         setTimeout(() => el.classList.remove('changed'), 150);
       } else {
         renderPlayers();
       }
+      evaluateEliminationByState(playerIndex, 'life');
     }
 
     function setViewMode(mode) {
@@ -991,6 +1185,7 @@
       state.players.push(createPlayer(state.players.length));
       state.playerTurnMs.push(0);
       state.numPlayers = state.players.length;
+      logHistory('Added Player ' + state.numPlayers + '.');
       renderAll();
     }
 
@@ -998,12 +1193,14 @@
       if (state.numPlayers <= 1) return;
       if (!window.confirm('Remove Player ' + state.numPlayers + '?')) return;
       const removed = state.numPlayers - 1;
+      const removedName = state.players[removed] ? state.players[removed].name : ('Player ' + (removed + 1));
       state.players.pop();
       state.playerTurnMs.pop();
       state.numPlayers = state.players.length;
       if (state.currentTurn >= state.numPlayers) state.currentTurn = 0;
       if (state.focusedPlayer >= state.numPlayers) state.focusedPlayer = state.numPlayers - 1;
       state.players.forEach((p) => delete p.commanderDamage[removed]);
+      logHistory('Removed ' + removedName + '.');
       renderAll();
     }
 
@@ -1053,7 +1250,9 @@
     }
 
     function setCurrentTurn(index, fromHighRoll, shouldAdvanceRound) {
+      if (state.gameEnded) return;
       if (index < 0 || index >= state.numPlayers) return;
+      if (!state.players[index] || !state.players[index].alive) return;
       const now = Date.now();
       captureTurnTime(now);
       const previous = state.currentTurn;
@@ -1068,7 +1267,10 @@
     }
 
     function nextTurn() {
-      setCurrentTurn((state.currentTurn + 1) % state.numPlayers, false, true);
+      if (state.gameEnded) return;
+      const next = getNextAliveIndex(state.currentTurn);
+      if (next === -1) return;
+      setCurrentTurn(next, false, true);
     }
 
     function getGameElapsedMs() {
@@ -1087,6 +1289,7 @@
       document.getElementById('turnTimer').textContent = formatTime(getCurrentTurnElapsedMs());
       document.getElementById('turnPlayerLabel').textContent = 'P' + (state.currentTurn + 1);
       document.getElementById('clockPauseBtn').textContent = state.isPaused ? 'Resume' : 'Pause';
+      setGameStatusText();
     }
 
     function toggleClockPause() {
@@ -1124,6 +1327,23 @@
       if (event && event.target && event.target.id === 'counterModal') closeModal();
     }
 
+    function openHistoryModal() {
+      if (!state.history.length) {
+        openModal('Game History', '<div class="tool-subvalue">No history yet.</div>');
+        return;
+      }
+      let html = '<div class="history-list">';
+      for (let i = state.history.length - 1; i >= 0; i--) {
+        const item = state.history[i];
+        html += '<div class="history-item">' +
+          '<div class="history-time">' + formatHistoryTime(item.ts) + '</div>' +
+          '<div class="history-text">' + item.text + '</div>' +
+          '</div>';
+      }
+      html += '</div>';
+      openModal('Game History', html);
+    }
+
     function openCountersModal(playerIndex) {
       const p = state.players[playerIndex];
       let html = '';
@@ -1145,16 +1365,26 @@
     }
 
     function changeCounter(playerIndex, key, delta) {
+      if (state.gameEnded) return;
       const p = state.players[playerIndex];
-      if (!p || typeof p[key] !== 'number') return;
+      if (!p || !p.alive || typeof p[key] !== 'number') return;
       p[key] = Math.max(0, p[key] + delta);
       const modalEl = document.getElementById('counter-' + playerIndex + '-' + key);
       if (modalEl) modalEl.textContent = p[key];
       renderPlayers();
+      if (key === 'poison' && delta > 0) {
+        logHistory(p.name + ' gained poison (' + p[key] + ').');
+      }
+      evaluateEliminationByState(playerIndex, 'counter');
     }
 
     function openCommanderModal(playerIndex) {
       const p = state.players[playerIndex];
+      if (!p) return;
+      if (state.numPlayers <= 1) {
+        openModal(p.name + ' - Commander Damage', '<div class="tool-subvalue">Add another player to track commander damage.</div>');
+        return;
+      }
       let html = '<div class="cmdr-damage-grid">';
       state.players.forEach((other, j) => {
         if (j === playerIndex) return;
@@ -1173,12 +1403,18 @@
     }
 
     function changeCmdrDmg(toPlayer, fromPlayer, delta) {
+      if (state.gameEnded) return;
       const p = state.players[toPlayer];
+      if (!p || !p.alive) return;
       if (!p.commanderDamage[fromPlayer]) p.commanderDamage[fromPlayer] = 0;
       p.commanderDamage[fromPlayer] = Math.max(0, p.commanderDamage[fromPlayer] + delta);
       const el = document.getElementById('cmdr-' + toPlayer + '-' + fromPlayer);
       if (el) el.textContent = p.commanderDamage[fromPlayer];
       renderPlayers();
+      if (delta > 0) {
+        logHistory(p.name + ' took commander damage from P' + (fromPlayer + 1) + ' (' + p.commanderDamage[fromPlayer] + ').');
+      }
+      evaluateEliminationByState(toPlayer, 'commander');
     }
 
     function openPlayerActionsModal(playerIndex) {
@@ -1200,7 +1436,16 @@
 
     function togglePlayerAlive(playerIndex) {
       state.players[playerIndex].alive = !state.players[playerIndex].alive;
+      if (state.players[playerIndex].alive) {
+        logHistory(state.players[playerIndex].name + ' was brought back into the game.');
+      } else {
+        logHistory(state.players[playerIndex].name + ' was marked out of the game.');
+      }
+      state.gameEnded = false;
+      state.winnerIndex = null;
       renderPlayers();
+      setGameStatusText();
+      endGameIfNeeded();
       openPlayerActionsModal(playerIndex);
     }
 
@@ -1264,11 +1509,18 @@
     }
 
     function applyLifeInput() {
+      if (state.gameEnded) return;
       const value = parseInt(lifeInputState.buffer, 10);
       if (!Number.isFinite(value)) return;
       if (lifeInputState.playerIndex === null || !state.players[lifeInputState.playerIndex]) return;
-      state.players[lifeInputState.playerIndex].life = value;
+      const p = state.players[lifeInputState.playerIndex];
+      const before = p.life;
+      p.life = value;
+      if (value < before) {
+        logHistory(p.name + ' life set ' + before + ' -> ' + value + '.');
+      }
       renderPlayers();
+      evaluateEliminationByState(lifeInputState.playerIndex, 'manual');
       closeModal();
     }
 

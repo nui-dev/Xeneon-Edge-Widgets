@@ -2,6 +2,14 @@
 
 ## MTG-specific symbols
 
+- Local icon pack added in this repo (`images/`):
+  - `mtg_icon_poison.svg`
+  - `mtg_icon_commander.svg`
+  - `mtg_icon_energy.svg`
+  - `mtg_icon_experience.svg`
+  - `mtg_icon_partner.svg`
+  - `mtg_mana_w.svg`, `mtg_mana_u.svg`, `mtg_mana_b.svg`, `mtg_mana_r.svg`, `mtg_mana_g.svg`
+
 - Mana symbols (font + SVG source): `https://mana.andrewgioia.com/`
   - Notes: Great for `{W}{U}{B}{R}{G}`, tap, energy, etc.
   - License notes on site: Mana font uses SIL OFL 1.1, CSS under MIT; symbol imagery references Wizards IP.
