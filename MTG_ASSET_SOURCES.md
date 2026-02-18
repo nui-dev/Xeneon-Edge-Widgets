@@ -42,8 +42,3 @@
 
 - Wikimedia example (white mana, CC0): `https://commons.wikimedia.org/wiki/File:MTG_(W)_B%26W.svg`
   - Notes: If you want per-color SVG files quickly without bundling a font.
-
-## Visual inspiration (do not copy assets directly)
-
-- Lotus reference UI: `https://lifecounter.app/`
-  - Notes: Use for interaction ideas only (layout/gesture inspiration).
