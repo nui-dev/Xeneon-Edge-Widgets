@@ -265,6 +265,235 @@
       .status-card { max-width: none; }
       .notice { left: 22px; right: 22px; max-width: none; top: 22px; }
     }
+    /* Edge-first layout overrides */
+    body {
+      font-family: Georgia, 'Times New Roman', serif;
+      letter-spacing: 0.01em;
+    }
+    .widget-root {
+      padding: 10px 12px 8px;
+      gap: 8px;
+    }
+    .topbar {
+      grid-template-columns: 1.6fr 0.95fr 0.72fr;
+      min-height: 88px;
+      gap: 8px;
+    }
+    .hero-card, .rank-card, .status-card, .panel, .footer-strip {
+      border-radius: 14px;
+      border-color: rgba(200, 155, 60, 0.16);
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.22);
+    }
+    .hero-card {
+      grid-template-columns: 72px 1fr auto;
+      padding: 12px 14px;
+      min-height: 88px;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: var(--hero-art, none);
+      background-position: right center;
+      background-size: cover;
+      opacity: 0.18;
+      filter: saturate(1.05);
+      pointer-events: none;
+    }
+    .hero-card::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, rgba(8,17,31,0.96) 0%, rgba(8,17,31,0.9) 46%, rgba(8,17,31,0.58) 100%);
+      pointer-events: none;
+    }
+    .hero-card > * { position: relative; z-index: 1; }
+    .crest {
+      width: 72px;
+      height: 72px;
+      border-radius: 14px;
+      background-image: var(--profile-icon, linear-gradient(135deg, rgba(200, 155, 60, 0.4), rgba(11, 74, 117, 0.45)));
+      background-size: cover;
+      background-position: center;
+      font-size: 0;
+    }
+    .crest::after {
+      content: attr(data-token);
+      display: flex;
+      width: 100%;
+      height: 100%;
+      align-items: flex-end;
+      justify-content: flex-start;
+      padding: 8px;
+      font-size: 18px;
+      font-weight: 800;
+      color: #f4e8cb;
+      background: linear-gradient(180deg, transparent, rgba(0,0,0,0.55));
+      border-radius: 14px;
+      box-sizing: border-box;
+    }
+    .player-name { font-size: 24px; }
+    .tagline { font-size: 14px; }
+    .eyebrow, .panel-subtitle, .objective-label, .kpi-label, .setup-label { font-size: 9px; letter-spacing: 1.4px; }
+    .pill { padding: 5px 9px; font-size: 11px; }
+    .pill strong { font-size: 12px; }
+    .hero-side { min-width: 160px; gap: 6px; }
+    .rank-card, .status-card, .panel { padding: 12px; gap: 8px; }
+    .rank-tier { font-size: 18px; }
+    .rank-points { font-size: 28px; }
+    .status-card { min-width: 0; max-width: none; }
+    .status-badge { padding: 6px 10px; font-size: 11px; }
+    .content-grid {
+      grid-template-columns: 1.24fr 1fr 0.88fr;
+      gap: 8px;
+    }
+    .panel-header { margin-bottom: 8px; }
+    .panel-title { font-size: 15px; }
+    .live-main {
+      grid-template-columns: 1.12fr 0.88fr;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .live-scorecard {
+      min-height: 156px;
+      padding: 12px;
+      border-radius: 12px;
+      background:
+        linear-gradient(135deg, rgba(8, 40, 66, 0.82), rgba(6, 20, 34, 0.92)),
+        var(--live-art, none);
+      background-size: cover;
+      background-position: center;
+      background-blend-mode: screen, normal;
+    }
+    .match-phase { font-size: 11px; }
+    .score-line { font-size: 56px; }
+    .featured-champion {
+      width: auto;
+      padding: 10px;
+      border-radius: 12px;
+      background:
+        linear-gradient(180deg, rgba(200, 155, 60, 0.12), rgba(7, 16, 30, 0.5)),
+        rgba(255,255,255,0.03);
+    }
+    .champ-splash {
+      min-height: 116px;
+      font-size: 22px;
+      background-image: var(--featured-art, linear-gradient(135deg, rgba(200, 155, 60, 0.3), rgba(12, 58, 95, 0.65)));
+      background-size: cover;
+      background-position: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .champ-splash::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, transparent 0%, rgba(7,16,30,0.12) 38%, rgba(7,16,30,0.86) 100%);
+    }
+    .champ-splash { align-items: flex-end; }
+    .champ-splash > span, .champ-splash { position: relative; z-index: 1; }
+    .live-objectives, .kpi-grid { gap: 8px; }
+    .objective, .kpi {
+      padding: 9px 10px;
+      border-radius: 10px;
+    }
+    .objective-value, .kpi-value { font-size: 18px; }
+    .match-list, .champion-list { gap: 8px; }
+    .match-card, .champion-card {
+      padding: 8px 10px;
+      border-radius: 12px;
+      gap: 10px;
+      min-height: 58px;
+    }
+    .result-icon, .champ-icon {
+      width: 50px;
+      height: 50px;
+      border-radius: 10px;
+      background-size: cover;
+      background-position: center;
+      overflow: hidden;
+      position: relative;
+      font-size: 0;
+    }
+    .result-icon::after, .champ-icon::after {
+      content: attr(data-token);
+      position: absolute;
+      inset: auto 0 0 0;
+      padding: 4px 5px;
+      font-size: 11px;
+      font-weight: 800;
+      color: #f3e7c7;
+      background: linear-gradient(180deg, transparent, rgba(0,0,0,0.72));
+      text-align: center;
+    }
+    .match-title, .champ-name { font-size: 13px; }
+    .match-subtitle, .champ-meta, .match-time, .champ-games { font-size: 11px; }
+    .match-kda, .champ-rate { font-size: 16px; }
+    .footer-strip {
+      min-height: 56px;
+      padding: 8px 10px;
+      display: grid;
+      grid-template-columns: auto 1fr auto auto;
+      align-items: center;
+    }
+    .recent-strip { gap: 6px; }
+    .recent-chip {
+      min-width: 64px;
+      padding: 7px 9px;
+      border-radius: 10px;
+    }
+    .recent-result { font-size: 10px; }
+    .recent-score { font-size: 14px; }
+    .notice {
+      top: auto;
+      bottom: 62px;
+      right: 12px;
+      max-width: 320px;
+      border-radius: 12px;
+      padding: 8px 10px;
+      font-size: 11px;
+      background: rgba(10, 17, 28, 0.94);
+    }
+    .browser-test-panel {
+      left: auto;
+      right: 12px;
+      bottom: 62px;
+      width: 300px;
+      padding: 12px;
+      display: none;
+    }
+    .browser-test-panel.visible.expanded { display: block; }
+    .browser-test-actions { margin-top: 10px; }
+    .browser-toggle {
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.04);
+      color: var(--text-primary);
+      padding: 8px 10px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .legal-line {
+      font-size: 10px;
+      color: rgba(220, 228, 240, 0.68);
+      line-height: 1.25;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    @media (max-width: 1300px) {
+      .browser-test-panel {
+        width: calc(100vw - 24px);
+        right: 12px;
+        left: 12px;
+      }
+      .footer-strip {
+        grid-template-columns: 1fr;
+      }
+    }
   </style>
 </head>
 <body>
@@ -276,8 +505,8 @@
         <div class="hero-copy">
           <div class="eyebrow">tr('Summoner Snapshot')</div>
           <div class="player-line">
-            <div id="playerName" class="player-name">Aether Fang</div>
-            <div id="playerTag" class="tagline">#NA1</div>
+            <div id="playerName" class="player-name">Sn1per1</div>
+            <div id="playerTag" class="tagline">#NA2</div>
           </div>
           <div class="meta-row">
             <div class="pill"><strong id="regionLabel">NA1</strong> tr('Region')</div>
@@ -288,14 +517,14 @@
         </div>
         <div class="hero-side">
           <div class="eyebrow">tr('Current Focus')</div>
-          <div id="focusLine" class="rank-tier">Ranked Solo climb</div>
+          <div id="focusLine" class="rank-tier">Precision marksman form</div>
           <div id="lastUpdated" class="pill"><strong>--</strong> tr('Last Sync')</div>
         </div>
       </div>
       <div class="rank-card">
         <div class="eyebrow">tr('Ranked Overview')</div>
-        <div id="rankTier" class="rank-tier">Emerald II</div>
-        <div id="rankPoints" class="rank-points">64 LP</div>
+        <div id="rankTier" class="rank-tier">Platinum I</div>
+        <div id="rankPoints" class="rank-points">78 LP</div>
         <div class="hero-stats">
           <div class="pill"><strong id="rankRecord">41W 30L</strong> tr('Record')</div>
           <div class="pill"><strong id="queueLabel">Solo/Duo</strong> tr('Queue')</div>
@@ -331,7 +560,7 @@
             <aside class="featured-champion">
               <div>
                 <div class="eyebrow" id="featuredRole">Mid / Carry</div>
-                <div class="champ-splash" id="featuredChampion">Ahri</div>
+                <div class="champ-splash" id="featuredChampion">Jhin</div>
               </div>
               <div class="kpi-grid">
                 <div class="kpi"><div class="kpi-label">tr('KDA')</div><div id="featuredKda" class="kpi-value">7 / 2 / 6</div></div>
@@ -369,6 +598,8 @@
     <section id="recentStripPanel" class="footer-strip">
       <div class="eyebrow">tr('Momentum Strip')</div>
       <div id="recentStrip" class="recent-strip" style="flex:1;min-width:0;"></div>
+      <div id="legalLine" class="legal-line">League of Legends art assets are used under Riot policy. Riot Games does not endorse this project.</div>
+      <button id="toggleBrowserTest" class="browser-toggle">Browser Tools</button>
       <button id="openSetupButton" class="setup-input ghost-button" style="width:auto;min-width:170px;">tr('Widget Setup')</button>
     </section>
     <div id="setupScreen" class="setup-screen">
@@ -386,9 +617,9 @@
         </div>
         <div class="setup-form">
           <div><div class="setup-label">tr('Riot API Key')</div><input id="apiKeyInput" class="setup-input" type="password" placeholder="RGAPI-..." /></div>
-          <div><div class="setup-label">tr('Riot ID Game Name')</div><input id="gameNameInput" class="setup-input" type="text" placeholder="Aether Fang" /></div>
+          <div><div class="setup-label">tr('Riot ID Game Name')</div><input id="gameNameInput" class="setup-input" type="text" placeholder="Sn1per1" /></div>
           <div class="setup-row">
-            <div><div class="setup-label">tr('Tag Line')</div><input id="tagLineInput" class="setup-input" type="text" placeholder="NA1" /></div>
+            <div><div class="setup-label">tr('Tag Line')</div><input id="tagLineInput" class="setup-input" type="text" placeholder="NA2" /></div>
             <div><div class="setup-label">tr('Region')</div><select id="regionInput" class="setup-select"><option value="na1">NA1</option><option value="euw1">EUW1</option><option value="eun1">EUN1</option><option value="kr">KR</option><option value="br1">BR1</option><option value="la1">LA1</option><option value="la2">LA2</option><option value="oc1">OC1</option><option value="tr1">TR1</option><option value="ru">RU</option><option value="jp1">JP1</option></select></div>
           </div>
           <div><div class="setup-label">tr('Optional Proxy Base URL')</div><input id="proxyBaseInput" class="setup-input" type="text" placeholder="https://your-service.example.com" /></div>
@@ -468,22 +699,22 @@
       tr1: 'europe',
       ru: 'europe'
     };
-    var state = { settings: null, data: null, pollTimerId: null };
+    var state = { settings: null, data: null, pollTimerId: null, ddragonVersion: null };
     var MOCK_DATA = {
-      profile: { gameName: 'Aether Fang', tagLine: 'NA1', region: 'NA1', role: 'Mid', winRate: 58, last10: '7-3', focus: 'Ranked Solo climb', rankTier: 'Emerald II', leaguePoints: 64, wins: 41, losses: 30, queue: 'Solo/Duo', avgKda: '4.1', status: 'idle' },
-      liveMatch: { available: true, headline: 'Control mage online', subtitle: 'Mock preview using the expected proxy shape', gameTime: '28:14', phase: 'In Progress', queueName: 'Ranked Solo / Summoner\'s Rift', blueKills: 18, redKills: 14, dragons: '3 - 1', towers: '7 - 4', gold: '54k - 49k', role: 'Mid / Carry', champion: 'Ahri', kda: '7 / 2 / 6', cs: '211', vision: '28', damage: '24k', impact: '72%', participation: '72%', nextObjective: 'Baron 1:12', powerSpike: '2 items' },
+      profile: { gameName: 'Sn1per1', tagLine: 'NA2', region: 'NA2', role: 'Bottom', winRate: 61, last10: '8-2', focus: 'Precision marksman form', rankTier: 'Platinum I', leaguePoints: 78, wins: 54, losses: 35, queue: 'Solo/Duo', avgKda: '5.2', status: 'idle', featuredChampion: 'Jhin' },
+      liveMatch: { available: true, headline: 'Curtain call online', subtitle: 'Mock preview using Riot Data Dragon art', gameTime: '24:38', phase: 'In Progress', queueName: 'Ranked Solo / Summoner\'s Rift', blueKills: 16, redKills: 9, dragons: '2 - 1', towers: '6 - 2', gold: '49k - 41k', role: 'ADC / Carry', champion: 'Jhin', kda: '8 / 1 / 5', cs: '214', vision: '21', damage: '27k', impact: '81%', participation: '81%', nextObjective: 'Soul 0:54', powerSpike: '3 items' },
       recentMatches: [
-        { result: 'W', queue: 'Ranked Solo', champion: 'Ahri', kda: '11 / 3 / 9', detail: '28:14   221 CS', ago: '14m ago' },
-        { result: 'L', queue: 'Ranked Solo', champion: 'Orianna', kda: '4 / 6 / 7', detail: '31:02   248 CS', ago: '1h ago' },
-        { result: 'W', queue: 'Ranked Solo', champion: 'Vex', kda: '8 / 2 / 12', detail: '26:40   190 CS', ago: '4h ago' },
-        { result: 'W', queue: 'Flex', champion: 'Ahri', kda: '9 / 4 / 10', detail: '34:19   244 CS', ago: 'Yesterday' },
-        { result: 'L', queue: 'Solo/Duo', champion: 'Syndra', kda: '5 / 7 / 5', detail: '29:17   207 CS', ago: 'Yesterday' }
+        { result: 'W', queue: 'Ranked Solo', champion: 'Jhin', kda: '12 / 2 / 7', detail: '31:12   246 CS', ago: '14m ago' },
+        { result: 'W', queue: 'Ranked Solo', champion: 'Caitlyn', kda: '9 / 1 / 11', detail: '27:44   232 CS', ago: '1h ago' },
+        { result: 'L', queue: 'Ranked Solo', champion: 'Ashe', kda: '4 / 5 / 12', detail: '30:51   205 CS', ago: '4h ago' },
+        { result: 'W', queue: 'Flex', champion: 'Jinx', kda: '11 / 4 / 8', detail: '33:07   251 CS', ago: 'Yesterday' },
+        { result: 'W', queue: 'Solo/Duo', champion: 'Jhin', kda: '10 / 3 / 6', detail: '28:03   223 CS', ago: 'Yesterday' }
       ],
       championPool: [
-        { champion: 'Ahri', role: 'Mid', winRate: '64%', games: '14 games', token: 'AH' },
-        { champion: 'Orianna', role: 'Mid', winRate: '57%', games: '7 games', token: 'OR' },
-        { champion: 'Vex', role: 'Mid', winRate: '60%', games: '5 games', token: 'VX' },
-        { champion: 'Syndra', role: 'Mid', winRate: '50%', games: '4 games', token: 'SY' }
+        { champion: 'Jhin', role: 'Bottom', winRate: '67%', games: '18 games', token: 'JH' },
+        { champion: 'Caitlyn', role: 'Bottom', winRate: '61%', games: '11 games', token: 'CA' },
+        { champion: 'Ashe', role: 'Bottom', winRate: '56%', games: '9 games', token: 'AS' },
+        { champion: 'Jinx', role: 'Bottom', winRate: '58%', games: '7 games', token: 'JI' }
       ]
     };
     function tr(key) { return key; }
@@ -509,6 +740,31 @@
     function formatSyncTime() { var now = new Date(); return String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0'); }
     function showProxyNotice(text) { var el = document.getElementById('proxyNotice'); el.textContent = text || ''; el.classList.toggle('visible', !!text); }
     function setSetupVisible(visible) { document.getElementById('setupScreen').classList.toggle('visible', !!visible); }
+    async function ensureDdragonVersion() {
+      if (state.ddragonVersion) return state.ddragonVersion;
+      try {
+        var response = await fetch('https://ddragon.leagueoflegends.com/api/versions.json');
+        if (response.ok) {
+          var versions = await response.json();
+          if (versions && versions.length) {
+            state.ddragonVersion = versions[0];
+            return state.ddragonVersion;
+          }
+        }
+      } catch (e) {}
+      state.ddragonVersion = '15.6.1';
+      return state.ddragonVersion;
+    }
+    function championSquareUrl(name) {
+      var version = state.ddragonVersion || '15.6.1';
+      return 'https://ddragon.leagueoflegends.com/cdn/' + version + '/img/champion/' + encodeURIComponent(name) + '.png';
+    }
+    function championSplashUrl(name) {
+      return 'https://ddragon.leagueoflegends.com/cdn/img/champion/splash/' + encodeURIComponent(name) + '_0.jpg';
+    }
+    function championLoadingUrl(name) {
+      return 'https://ddragon.leagueoflegends.com/cdn/img/champion/loading/' + encodeURIComponent(name) + '_0.jpg';
+    }
     function fillSetupForm(settings) { var s = settings || {}; document.getElementById('apiKeyInput').value = s.apiKey || ''; document.getElementById('gameNameInput').value = s.gameName || ''; document.getElementById('tagLineInput').value = s.tagLine || ''; document.getElementById('regionInput').value = (s.region || 'na1').toLowerCase(); document.getElementById('proxyBaseInput').value = s.proxyBaseUrl || ''; }
     function collectSetupForm() { return { apiKey: document.getElementById('apiKeyInput').value.trim(), gameName: document.getElementById('gameNameInput').value.trim(), tagLine: document.getElementById('tagLineInput').value.trim(), region: document.getElementById('regionInput').value.trim(), proxyBaseUrl: document.getElementById('proxyBaseInput').value.trim() }; }
     function isBrowserTestMode() { return typeof iCUE_initialized === 'undefined'; }
@@ -526,7 +782,6 @@
     function bindBrowserTestPanel() {
       if (!isBrowserTestMode()) return;
       var panel = document.getElementById('browserTestPanel');
-      panel.classList.add('visible');
       applyBrowserTestDefaults();
       ['testRefreshInterval', 'testPreferredQueue', 'testShowLivePanel', 'testShowRecentStrip', 'testTextColor', 'testAccentColor', 'testBackgroundColor', 'testTransparency'].forEach(function (id) {
         document.getElementById(id).addEventListener('input', function () {
@@ -539,6 +794,10 @@
         });
       });
       document.getElementById('testOpenSetup').addEventListener('click', function () { setSetupVisible(true); });
+      document.getElementById('toggleBrowserTest').addEventListener('click', function () {
+        panel.classList.toggle('visible');
+        panel.classList.toggle('expanded');
+      });
       document.getElementById('testResetTheme').addEventListener('click', function () {
         document.getElementById('testRefreshInterval').value = 2;
         document.getElementById('testPreferredQueue').value = 'Ranked Solo';
@@ -563,7 +822,11 @@
       document.getElementById('recentStripPanel').classList.toggle('is-hidden', typeof showRecentStrip !== 'undefined' && showRecentStrip === 'Hide');
     }
     function renderHeader(profile) {
+      var featuredChampion = profile.featuredChampion || (state.data && state.data.liveMatch && state.data.liveMatch.champion) || 'Jhin';
       document.getElementById('crest').textContent = initials(profile.gameName, profile.tagLine);
+      document.getElementById('crest').setAttribute('data-token', initials(profile.gameName, profile.tagLine));
+      document.getElementById('crest').style.setProperty('--profile-icon', 'url("' + championSquareUrl(featuredChampion) + '")');
+      document.querySelector('.widget-root').style.setProperty('--hero-art', 'url("' + championSplashUrl(featuredChampion) + '")');
       document.getElementById('playerName').textContent = profile.gameName;
       document.getElementById('playerTag').textContent = '#' + profile.tagLine;
       document.getElementById('regionLabel').textContent = profile.region;
@@ -578,6 +841,7 @@
       document.getElementById('queueFocus').textContent = getPreferredQueue();
       document.getElementById('avgKda').textContent = profile.avgKda;
       document.getElementById('lastUpdated').innerHTML = '<strong>' + escHtml(formatSyncTime()) + '</strong> ' + escHtml(tr('Last Sync'));
+      document.getElementById('legalLine').textContent = 'League of Legends assets from Riot Data Dragon. Riot Games does not endorse this project.';
       var badge = document.getElementById('statusBadge');
       var isLive = profile.status === 'live';
       badge.classList.toggle('live', isLive);
@@ -600,6 +864,8 @@
       document.getElementById('goldValue').textContent = live.gold;
       document.getElementById('featuredRole').textContent = live.role;
       document.getElementById('featuredChampion').textContent = live.champion;
+      document.querySelector('.champ-splash').style.setProperty('--featured-art', 'url("' + championLoadingUrl(live.champion || 'Jhin') + '")');
+      document.querySelector('.live-scorecard').style.setProperty('--live-art', 'url("' + championSplashUrl(live.champion || 'Jhin') + '")');
       document.getElementById('featuredKda').textContent = live.kda;
       document.getElementById('featuredCs').textContent = live.cs;
       document.getElementById('featuredVision').textContent = live.vision;
@@ -613,14 +879,16 @@
       var wins = 0;
       document.getElementById('recentMatches').innerHTML = (matches || []).map(function (match) {
         var win = match.result === 'W';
+        var token = initials(match.champion, '');
         if (win) wins += 1;
-        return '<div class="match-card"><div class="result-icon ' + (win ? 'result-win' : 'result-loss') + '">' + escHtml(match.result) + '</div><div class="match-copy"><div class="match-title">' + escHtml(match.champion) + '  ' + escHtml(match.queue) + '</div><div class="match-subtitle">' + escHtml(match.detail) + '</div></div><div><div class="match-kda">' + escHtml(match.kda) + '</div><div class="match-time">' + escHtml(match.ago) + '</div></div></div>';
+        return '<div class="match-card"><div class="result-icon ' + (win ? 'result-win' : 'result-loss') + '" data-token="' + escHtml(token) + '" style="background-image:url(\'' + escHtml(championSquareUrl(match.champion)) + '\');"></div><div class="match-copy"><div class="match-title">' + escHtml(match.champion) + '  ' + escHtml(match.queue) + '</div><div class="match-subtitle">' + escHtml(match.detail) + '</div></div><div><div class="match-kda">' + escHtml(match.kda) + '</div><div class="match-time">' + escHtml(match.ago) + '</div></div></div>';
       }).join('');
       document.getElementById('recentSummary').innerHTML = '<strong>' + wins + 'W ' + ((matches || []).length - wins) + 'L</strong> ' + escHtml(tr('Recent Form'));
     }
     function renderChampionPool(pool) {
       document.getElementById('championPool').innerHTML = (pool || []).map(function (entry) {
-        return '<div class="champion-card"><div class="champ-icon">' + escHtml(entry.token || initials(entry.champion, '')) + '</div><div class="champ-copy"><div class="champ-name">' + escHtml(entry.champion) + '</div><div class="champ-meta">' + escHtml(entry.role) + '</div></div><div><div class="champ-rate">' + escHtml(entry.winRate) + '</div><div class="champ-games">' + escHtml(entry.games) + '</div></div></div>';
+        var token = entry.token || initials(entry.champion, '');
+        return '<div class="champion-card"><div class="champ-icon" data-token="' + escHtml(token) + '" style="background-image:url(\'' + escHtml(championSquareUrl(entry.champion)) + '\');"></div><div class="champ-copy"><div class="champ-name">' + escHtml(entry.champion) + '</div><div class="champ-meta">' + escHtml(entry.role) + '</div></div><div><div class="champ-rate">' + escHtml(entry.winRate) + '</div><div class="champ-games">' + escHtml(entry.games) + '</div></div></div>';
       }).join('');
       if (pool && pool.length) document.getElementById('poolSummary').innerHTML = '<strong>' + escHtml(pool[0].role) + '</strong> ' + escHtml(tr('Role Bias'));
     }
@@ -790,6 +1058,7 @@
       return response.json();
     }
     async function fetchAndRender() {
+      await ensureDdragonVersion();
       var settings = state.settings || loadSettings();
       if (!settings || !settings.apiKey || !settings.gameName || !settings.tagLine) {
         renderAll(MOCK_DATA);

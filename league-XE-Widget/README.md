@@ -25,6 +25,21 @@ The user enters:
 
 This is aimed at people using the widget personally on their own Xeneon Edge.
 
+The default local example identity used in the widget preview is:
+
+`Sn1per1#NA2`
+
+## Art and legal
+
+This widget is designed to use official League of Legends static art assets from Riot's Data Dragon service, such as champion square icons and splash/loading art.
+
+Important notes:
+
+- Riot artwork is not public domain.
+- This widget should be treated as a free fan/community project.
+- Riot's required disclaimer should remain visible in the product.
+- If non-Riot artwork is ever added later, it should only be used with explicit permission or a license that allows reuse.
+
 ## Optional proxy fallback
 
 If Riot requests from the widget are blocked by browser/runtime restrictions, the widget can still use:
