@@ -3,7 +3,7 @@ param(
 )
 
 $repoRoot = Split-Path -Parent $PSScriptRoot
-$url = "http://localhost:$Port/league-XE-Widget/League%20of%20Legends%20for%20XE"
+$url = "http://localhost:$Port/league-XE-Widget/League%20of%20Legends%20for%20XE.html"
 
 Write-Host "Serving Xeneon widget test page from $repoRoot on port $Port"
 Write-Host "Open: $url"

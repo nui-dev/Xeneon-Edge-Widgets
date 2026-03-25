@@ -47,7 +47,13 @@ Run:
 
 Then open:
 
-`http://localhost:8000/league-XE-Widget/League%20of%20Legends%20for%20XE`
+`http://localhost:8000/league-XE-Widget/League%20of%20Legends%20for%20XE.html`
+
+For Xeneon import/use, keep using the extensionless file:
+
+`League of Legends for XE`
+
+The `.html` copy exists only so a normal browser serves it as HTML during local preview.
 
 In browser mode, the widget exposes a small `Browser Test Mode` panel that simulates the iCUE properties such as:
 
