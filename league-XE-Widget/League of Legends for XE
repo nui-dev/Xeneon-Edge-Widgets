@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tr('League of Legends Dashboard')</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0 0 64 64'%3E%3Crect%20width='64'%20height='64'%20rx='14'%20fill='%23091520'/%3E%3Ctext%20x='32'%20y='42'%20text-anchor='middle'%20font-size='34'%20font-family='Segoe UI,Arial'%20font-weight='700'%20fill='%23c89b3c'%3EL%3C/text%3E%3C/svg%3E">
+  <meta name="x-icue-restrictions" data-restrictions='[{"device":"dashboard_lcd"}]'>
+  <meta name="x-icue-interactive">
+  <meta name="x-icue-property" content="refreshInterval" data-label="tr('Refresh (min)')" data-type="slider" data-default="2" data-min="1" data-max="15" data-step="1">
+  <meta name="x-icue-property" content="preferredQueue" data-label="tr('Preferred Queue')" data-type="tab-buttons" data-values="['Ranked Solo','Ranked Flex','Any']" data-default="'Ranked Solo'">
+  <meta name="x-icue-property" content="showLivePanel" data-label="tr('Live Panel')" data-type="tab-buttons" data-values="['Show','Hide']" data-default="'Show'">
+  <meta name="x-icue-property" content="showRecentStrip" data-label="tr('Recent Strip')" data-type="tab-buttons" data-values="['Show','Hide']" data-default="'Show'">
+  <meta name="x-icue-property" content="textColor" data-label="tr('Text Color')" data-type="color" data-default="'#f0e6d2'">
+  <meta name="x-icue-property" content="accentColor" data-label="tr('Accent Color')" data-type="color" data-default="'#c89b3c'">
+  <meta name="x-icue-property" content="backgroundColor" data-label="tr('Background')" data-type="color" data-default="'#091428'">
+  <meta name="x-icue-property" content="transparency" data-label="tr('Transparency')" data-type="slider" data-default="100" data-min="0" data-max="100" data-step="1">
+  <script id="x-icue-groups" type="application/json">
+  [
+    { "title": "tr('League of Legends Dashboard')", "properties": ["refreshInterval", "preferredQueue", "showLivePanel", "showRecentStrip"] },
+    { "title": "tr('Widget Personalization')", "properties": ["textColor", "accentColor", "backgroundColor", "transparency"] }
+  ]
+  </script>
+  <style>
+    :root {
+      --bg-color: #091428;
+      --panel-bg: rgba(6, 16, 28, 0.82);
+      --panel-soft: rgba(16, 33, 51, 0.76);
+      --text-primary: #f0e6d2;
+      --text-secondary: #a7b3c2;
+      --accent-color: #c89b3c;
+      --border-color: rgba(200, 155, 60, 0.22);
+      --shadow: 0 18px 50px rgba(0, 0, 0, 0.35);
+      --transparency: 1;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { width: 100vw; height: 100vh; overflow: hidden; }
+
+    body {
+      margin: 0;
+      background:
+        radial-gradient(circle at top left, rgba(200, 155, 60, 0.18), transparent 26%),
+        radial-gradient(circle at bottom right, rgba(12, 90, 138, 0.25), transparent 32%),
+        linear-gradient(135deg, #08111f 0%, var(--bg-color) 54%, #0a2239 100%);
+      color: var(--text-primary);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      opacity: var(--transparency);
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: manipulation;
+    }
+
+    .widget-root {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      padding: 18px 22px 16px;
+      gap: 14px;
+      overflow: hidden;
+    }
+
+    .widget-root::before,
+    .widget-root::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+
+    .widget-root::before {
+      background:
+        linear-gradient(90deg, rgba(200, 155, 60, 0.05) 0, rgba(200, 155, 60, 0.05) 1px, transparent 1px, transparent 80px),
+        linear-gradient(180deg, rgba(200, 155, 60, 0.04) 0, rgba(200, 155, 60, 0.04) 1px, transparent 1px, transparent 80px);
+      opacity: 0.25;
+    }
+
+    .widget-root::after {
+      background: linear-gradient(180deg, rgba(255,255,255,0.04), transparent 30%, rgba(0,0,0,0.18));
+      z-index: 0;
+    }
+
+    .widget-root > * { position: relative; z-index: 1; }
+
+    .topbar {
+      display: grid;
+      grid-template-columns: 1.35fr 1fr auto;
+      gap: 14px;
+      align-items: stretch;
+      min-height: 104px;
+    }
+
+    .hero-card, .rank-card, .status-card, .panel, .footer-strip, .setup-panel, .notice {
+      border: 1px solid var(--border-color);
+      background: linear-gradient(180deg, rgba(255,255,255,0.04), transparent), var(--panel-bg);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(12px);
+    }
+
+    .hero-card {
+      border-radius: 22px;
+      padding: 16px 18px;
+      display: grid;
+      grid-template-columns: 88px 1fr auto;
+      gap: 16px;
+      align-items: center;
+      overflow: hidden;
+    }
+
+    .crest {
+      width: 88px;
+      height: 88px;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background:
+        radial-gradient(circle at 30% 30%, rgba(255,255,255,0.12), transparent 35%),
+        linear-gradient(135deg, rgba(200, 155, 60, 0.4), rgba(11, 74, 117, 0.45));
+      border: 1px solid rgba(255,255,255,0.08);
+      font-size: 34px;
+      font-weight: 800;
+      letter-spacing: 1px;
+    }
+
+    .hero-copy, .match-copy, .champ-copy {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .eyebrow, .panel-subtitle, .objective-label, .kpi-label, .setup-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-secondary);
+    }
+
+    .player-line, .meta-row, .hero-stats, .status-meta, .recent-strip { display: flex; gap: 10px; flex-wrap: wrap; }
+    .player-name { font-size: 32px; font-weight: 800; line-height: 1; }
+    .tagline { font-size: 15px; color: var(--text-secondary); font-weight: 700; }
+
+    .pill {
+      padding: 7px 11px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.06);
+      font-size: 12px;
+      color: var(--text-secondary);
+      font-weight: 700;
+    }
+
+    .pill strong { color: var(--text-primary); font-size: 13px; }
+    .hero-side { display: flex; flex-direction: column; align-items: flex-end; justify-content: center; gap: 10px; min-width: 190px; }
+    .rank-card, .status-card, .panel { border-radius: 20px; padding: 16px; display: flex; flex-direction: column; gap: 10px; min-width: 0; min-height: 0; }
+    .rank-tier { font-size: 24px; font-weight: 800; letter-spacing: 0.5px; }
+    .rank-points { font-size: 42px; line-height: 1; font-weight: 900; color: var(--accent-color); }
+    .status-card { min-width: 240px; max-width: 260px; }
+    .status-badge { display: inline-flex; align-items: center; gap: 8px; width: fit-content; padding: 8px 12px; border-radius: 999px; background: rgba(247, 198, 95, 0.12); border: 1px solid rgba(247, 198, 95, 0.22); color: #ffe09a; font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
+    .status-badge.live { background: rgba(64, 210, 135, 0.12); border-color: rgba(64, 210, 135, 0.22); color: #9ef0c4; }
+    .status-dot { width: 8px; height: 8px; border-radius: 999px; background: currentColor; }
+    .content-grid { flex: 1; display: grid; grid-template-columns: 1.15fr 1.1fr 0.95fr; gap: 14px; min-height: 0; }
+    .panel-header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+    .panel-title { font-size: 18px; font-weight: 800; letter-spacing: 0.4px; }
+    .live-panel { background: radial-gradient(circle at top right, rgba(200, 155, 60, 0.18), transparent 30%), linear-gradient(180deg, rgba(255,255,255,0.04), transparent), var(--panel-bg); }
+    .live-main { display: grid; grid-template-columns: 1fr auto; gap: 18px; align-items: stretch; margin-bottom: 16px; }
+    .live-scorecard { display: flex; flex-direction: column; justify-content: space-between; gap: 12px; padding: 18px; min-height: 210px; border-radius: 18px; background: linear-gradient(135deg, rgba(15, 75, 110, 0.35), rgba(5, 20, 36, 0.82)), var(--panel-soft); border: 1px solid rgba(255,255,255,0.06); }
+    .match-phase { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 13px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; }
+    .score-line { display: flex; align-items: center; gap: 12px; font-size: 68px; line-height: 0.9; font-weight: 900; }
+    .score-divider { font-size: 24px; color: rgba(255,255,255,0.35); padding-top: 10px; }
+    .team-blue { color: #61c8ff; }
+    .team-red { color: #ff7a7a; }
+    .live-objectives, .kpi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+    .objective, .kpi { padding: 11px 12px; border-radius: 14px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.05); }
+    .objective-value, .kpi-value { font-size: 24px; font-weight: 800; }
+    .featured-champion { width: 200px; border-radius: 18px; padding: 14px; background: linear-gradient(180deg, rgba(200, 155, 60, 0.16), transparent 45%), rgba(255,255,255,0.035); border: 1px solid rgba(255,255,255,0.06); display: flex; flex-direction: column; gap: 12px; justify-content: space-between; }
+    .champ-splash { min-height: 120px; border-radius: 14px; background: radial-gradient(circle at 25% 20%, rgba(255,255,255,0.12), transparent 24%), linear-gradient(135deg, rgba(200, 155, 60, 0.3), rgba(12, 58, 95, 0.65)); display: flex; align-items: flex-end; padding: 12px; font-size: 26px; font-weight: 800; }
+    .match-list, .champion-list { display: flex; flex-direction: column; gap: 10px; overflow: hidden; min-height: 0; }
+    .match-card, .champion-card { display: grid; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.05); background: rgba(255,255,255,0.03); }
+    .match-card, .champion-card { grid-template-columns: auto 1fr auto; }
+    .result-icon, .champ-icon { width: 42px; height: 42px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 900; border: 1px solid rgba(255,255,255,0.08); }
+    .result-win { background: rgba(64, 210, 135, 0.18); color: #9ef0c4; }
+    .result-loss { background: rgba(255, 107, 107, 0.16); color: #ffb0b0; }
+    .champ-icon { background: linear-gradient(135deg, rgba(200, 155, 60, 0.2), rgba(10, 66, 98, 0.3)); color: var(--text-primary); }
+    .match-title, .champ-name { font-size: 15px; font-weight: 800; }
+    .match-subtitle, .champ-meta, .match-time, .champ-games { font-size: 12px; color: var(--text-secondary); }
+    .match-kda, .champ-rate { font-size: 18px; font-weight: 800; text-align: right; }
+    .footer-strip { border-radius: 18px; padding: 10px 12px; display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 76px; }
+    .recent-chip { min-width: 74px; padding: 10px 12px; border-radius: 14px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); text-align: center; }
+    .recent-result { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; font-weight: 800; }
+    .recent-score { font-size: 18px; font-weight: 800; line-height: 1; }
+    .notice { display: none; position: absolute; top: 132px; right: 22px; z-index: 4; max-width: 440px; border-radius: 16px; padding: 11px 13px; font-size: 12px; color: var(--text-secondary); }
+    .notice.visible { display: block; }
+    .setup-screen { display: none; position: absolute; inset: 0; z-index: 6; background: rgba(4, 10, 17, 0.78); backdrop-filter: blur(10px); align-items: center; justify-content: center; padding: 26px; }
+    .setup-screen.visible { display: flex; }
+    .setup-panel { width: min(980px, 100%); border-radius: 24px; padding: 24px; display: grid; grid-template-columns: 1.1fr 1fr; gap: 22px; }
+    .setup-copy h2 { margin: 0 0 12px; font-size: 30px; line-height: 1.05; }
+    .setup-copy p { margin: 0 0 12px; color: var(--text-secondary); line-height: 1.55; font-size: 14px; }
+    .setup-list { display: flex; flex-direction: column; gap: 10px; margin-top: 18px; }
+    .setup-list-item { padding: 12px 14px; border-radius: 14px; background: rgba(255,255,255,0.035); border: 1px solid rgba(255,255,255,0.05); color: var(--text-secondary); font-size: 13px; }
+    .setup-form { display: flex; flex-direction: column; gap: 12px; }
+    .setup-input, .setup-select, .setup-button { width: 100%; border-radius: 14px; border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.04); color: var(--text-primary); padding: 13px 14px; font-size: 14px; outline: none; }
+    .setup-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .setup-button { cursor: pointer; font-weight: 800; background: linear-gradient(135deg, rgba(200,155,60,0.9), rgba(160, 120, 32, 0.95)); color: #0a1428; border: none; margin-top: 8px; }
+    .ghost-button { background: transparent; color: var(--text-primary); border: 1px solid rgba(255,255,255,0.08); }
+    .setup-error { display: none; color: #ffb0b0; font-size: 12px; }
+    .setup-error.visible { display: block; }
+    .empty-state { flex: 1; display: none; align-items: center; justify-content: center; text-align: center; color: var(--text-secondary); padding: 24px; border-radius: 18px; border: 1px dashed rgba(255,255,255,0.1); background: rgba(255,255,255,0.02); }
+    .is-hidden { display: none !important; }
+    @media (max-width: 1300px) {
+      .content-grid, .topbar, .setup-panel { grid-template-columns: 1fr; }
+      .status-card { max-width: none; }
+      .notice { left: 22px; right: 22px; max-width: none; top: 22px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="widget-root">
+    <div id="proxyNotice" class="notice"></div>
+    <section class="topbar">
+      <div class="hero-card">
+        <div id="crest" class="crest">LL</div>
+        <div class="hero-copy">
+          <div class="eyebrow">tr('Summoner Snapshot')</div>
+          <div class="player-line">
+            <div id="playerName" class="player-name">Aether Fang</div>
+            <div id="playerTag" class="tagline">#NA1</div>
+          </div>
+          <div class="meta-row">
+            <div class="pill"><strong id="regionLabel">NA1</strong> tr('Region')</div>
+            <div class="pill"><strong id="roleLabel">Mid</strong> tr('Primary Role')</div>
+            <div class="pill"><strong id="winRateLabel">58%</strong> tr('Win Rate')</div>
+            <div class="pill"><strong id="formLabel">7-3</strong> tr('Last 10')</div>
+          </div>
+        </div>
+        <div class="hero-side">
+          <div class="eyebrow">tr('Current Focus')</div>
+          <div id="focusLine" class="rank-tier">Ranked Solo climb</div>
+          <div id="lastUpdated" class="pill"><strong>--</strong> tr('Last Sync')</div>
+        </div>
+      </div>
+      <div class="rank-card">
+        <div class="eyebrow">tr('Ranked Overview')</div>
+        <div id="rankTier" class="rank-tier">Emerald II</div>
+        <div id="rankPoints" class="rank-points">64 LP</div>
+        <div class="hero-stats">
+          <div class="pill"><strong id="rankRecord">41W 30L</strong> tr('Record')</div>
+          <div class="pill"><strong id="queueLabel">Solo/Duo</strong> tr('Queue')</div>
+        </div>
+      </div>
+      <div class="status-card">
+        <div class="eyebrow">tr('Session State')</div>
+        <div id="statusBadge" class="status-badge"><span class="status-dot"></span><span id="statusText">tr('Idle')</span></div>
+        <div id="statusHeadline" class="rank-tier">tr('Waiting for live game')</div>
+        <div class="status-meta">
+          <div class="pill"><strong id="queueFocus">Solo Queue</strong> tr('Focus')</div>
+          <div class="pill"><strong id="avgKda">4.1</strong> tr('Avg KDA')</div>
+        </div>
+      </div>
+    </section>
+    <section class="content-grid">
+      <section id="livePanel" class="panel live-panel">
+        <div class="panel-header">
+          <div><div class="panel-title">tr('Live Match')</div><div id="liveSubtitle" class="panel-subtitle">tr('Proxy ready with mock fallback')</div></div>
+          <div id="liveGameClock" class="pill"><strong>28:14</strong> tr('Game Time')</div>
+        </div>
+        <div id="liveContent">
+          <div class="live-main">
+            <div class="live-scorecard">
+              <div class="match-phase"><span id="matchPhase">tr('In Progress')</span><span id="liveQueueName">Ranked Solo / Summoner's Rift</span></div>
+              <div class="score-line"><span id="blueKills" class="team-blue">18</span><span class="score-divider">:</span><span id="redKills" class="team-red">14</span></div>
+              <div class="live-objectives">
+                <div class="objective"><div class="objective-label">tr('Dragons')</div><div id="dragonsValue" class="objective-value">3 - 1</div></div>
+                <div class="objective"><div class="objective-label">tr('Towers')</div><div id="towersValue" class="objective-value">7 - 4</div></div>
+                <div class="objective"><div class="objective-label">tr('Gold')</div><div id="goldValue" class="objective-value">54k - 49k</div></div>
+              </div>
+            </div>
+            <aside class="featured-champion">
+              <div>
+                <div class="eyebrow" id="featuredRole">Mid / Carry</div>
+                <div class="champ-splash" id="featuredChampion">Ahri</div>
+              </div>
+              <div class="kpi-grid">
+                <div class="kpi"><div class="kpi-label">tr('KDA')</div><div id="featuredKda" class="kpi-value">7 / 2 / 6</div></div>
+                <div class="kpi"><div class="kpi-label">tr('CS')</div><div id="featuredCs" class="kpi-value">211</div></div>
+                <div class="kpi"><div class="kpi-label">tr('Vision')</div><div id="featuredVision" class="kpi-value">28</div></div>
+                <div class="kpi"><div class="kpi-label">tr('Damage')</div><div id="featuredDamage" class="kpi-value">24k</div></div>
+              </div>
+            </aside>
+          </div>
+          <div class="panel-subtitle" style="margin-bottom:10px;">tr('Live Team Trends')</div>
+          <div class="kpi-grid">
+            <div class="kpi"><div class="kpi-label">tr('Teamfight Impact')</div><div id="liveImpact" class="kpi-value">72%</div></div>
+            <div class="kpi"><div class="kpi-label">tr('Kill Participation')</div><div id="liveParticipation" class="kpi-value">72%</div></div>
+            <div class="kpi"><div class="kpi-label">tr('Next Objective')</div><div id="nextObjective" class="kpi-value">Baron 1:12</div></div>
+            <div class="kpi"><div class="kpi-label">tr('Power Spike')</div><div id="powerSpike" class="kpi-value">2 items</div></div>
+          </div>
+        </div>
+        <div id="liveEmpty" class="empty-state">tr('No live match data yet. Connect a proxy or keep using the mock preview while we wire the backend.')</div>
+      </section>
+      <section class="panel">
+        <div class="panel-header">
+          <div><div class="panel-title">tr('Recent Matches')</div><div class="panel-subtitle">tr('Last five results')</div></div>
+          <div id="recentSummary" class="pill"><strong>3W 2L</strong> tr('Recent Form')</div>
+        </div>
+        <div id="recentMatches" class="match-list"></div>
+      </section>
+      <section class="panel">
+        <div class="panel-header">
+          <div><div class="panel-title">tr('Champion Pool')</div><div class="panel-subtitle">tr('Most played recently')</div></div>
+          <div id="poolSummary" class="pill"><strong>Mid</strong> tr('Role Bias')</div>
+        </div>
+        <div id="championPool" class="champion-list"></div>
+      </section>
+    </section>
+    <section id="recentStripPanel" class="footer-strip">
+      <div class="eyebrow">tr('Momentum Strip')</div>
+      <div id="recentStrip" class="recent-strip" style="flex:1;min-width:0;"></div>
+      <button id="openSetupButton" class="setup-input ghost-button" style="width:auto;min-width:170px;">tr('Widget Setup')</button>
+    </section>
+    <div id="setupScreen" class="setup-screen">
+      <div class="setup-panel">
+        <div class="setup-copy">
+          <div class="eyebrow">tr('League of Legends for XE')</div>
+          <h2>tr('Build the widget first, then plug in live Riot data safely.')</h2>
+          <p>tr('Direct local mode is the intended path for this widget. The API key is stored only in local widget storage on the user\'s machine.')</p>
+          <p>tr('If Riot browser requests are blocked in your XE runtime, you can still add an optional proxy later.')</p>
+          <div class="setup-list">
+            <div class="setup-list-item">tr('Recommended default: personal-use widget with a user-supplied Riot API key stored locally on this machine.')</div>
+            <div class="setup-list-item">tr('Optional fallback: add a proxy only if direct browser requests fail in your environment.')</div>
+            <div class="setup-list-item">tr('Use gameName and tagLine, not old summoner names, when possible.')</div>
+          </div>
+        </div>
+        <div class="setup-form">
+          <div><div class="setup-label">tr('Riot API Key')</div><input id="apiKeyInput" class="setup-input" type="password" placeholder="RGAPI-..." /></div>
+          <div><div class="setup-label">tr('Riot ID Game Name')</div><input id="gameNameInput" class="setup-input" type="text" placeholder="Aether Fang" /></div>
+          <div class="setup-row">
+            <div><div class="setup-label">tr('Tag Line')</div><input id="tagLineInput" class="setup-input" type="text" placeholder="NA1" /></div>
+            <div><div class="setup-label">tr('Region')</div><select id="regionInput" class="setup-select"><option value="na1">NA1</option><option value="euw1">EUW1</option><option value="eun1">EUN1</option><option value="kr">KR</option><option value="br1">BR1</option><option value="la1">LA1</option><option value="la2">LA2</option><option value="oc1">OC1</option><option value="tr1">TR1</option><option value="ru">RU</option><option value="jp1">JP1</option></select></div>
+          </div>
+          <div><div class="setup-label">tr('Optional Proxy Base URL')</div><input id="proxyBaseInput" class="setup-input" type="text" placeholder="https://your-service.example.com" /></div>
+          <div class="setup-row">
+            <button id="saveSetupButton" class="setup-button">tr('Save And Load')</button>
+            <button id="mockSetupButton" class="setup-input ghost-button">tr('Use Mock Preview')</button>
+          </div>
+          <div id="setupError" class="setup-error">tr('Enter a Riot API key and Riot ID, or use mock preview.')</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    var SETTINGS_KEY = 'league_xe_widget_settings';
+    var PLATFORM_TO_REGION = {
+      br1: 'americas',
+      eun1: 'europe',
+      euw1: 'europe',
+      jp1: 'asia',
+      kr: 'asia',
+      la1: 'americas',
+      la2: 'americas',
+      na1: 'americas',
+      oc1: 'americas',
+      tr1: 'europe',
+      ru: 'europe'
+    };
+    var state = { settings: null, data: null, pollTimerId: null };
+    var MOCK_DATA = {
+      profile: { gameName: 'Aether Fang', tagLine: 'NA1', region: 'NA1', role: 'Mid', winRate: 58, last10: '7-3', focus: 'Ranked Solo climb', rankTier: 'Emerald II', leaguePoints: 64, wins: 41, losses: 30, queue: 'Solo/Duo', avgKda: '4.1', status: 'idle' },
+      liveMatch: { available: true, headline: 'Control mage online', subtitle: 'Mock preview using the expected proxy shape', gameTime: '28:14', phase: 'In Progress', queueName: 'Ranked Solo / Summoner\'s Rift', blueKills: 18, redKills: 14, dragons: '3 - 1', towers: '7 - 4', gold: '54k - 49k', role: 'Mid / Carry', champion: 'Ahri', kda: '7 / 2 / 6', cs: '211', vision: '28', damage: '24k', impact: '72%', participation: '72%', nextObjective: 'Baron 1:12', powerSpike: '2 items' },
+      recentMatches: [
+        { result: 'W', queue: 'Ranked Solo', champion: 'Ahri', kda: '11 / 3 / 9', detail: '28:14   221 CS', ago: '14m ago' },
+        { result: 'L', queue: 'Ranked Solo', champion: 'Orianna', kda: '4 / 6 / 7', detail: '31:02   248 CS', ago: '1h ago' },
+        { result: 'W', queue: 'Ranked Solo', champion: 'Vex', kda: '8 / 2 / 12', detail: '26:40   190 CS', ago: '4h ago' },
+        { result: 'W', queue: 'Flex', champion: 'Ahri', kda: '9 / 4 / 10', detail: '34:19   244 CS', ago: 'Yesterday' },
+        { result: 'L', queue: 'Solo/Duo', champion: 'Syndra', kda: '5 / 7 / 5', detail: '29:17   207 CS', ago: 'Yesterday' }
+      ],
+      championPool: [
+        { champion: 'Ahri', role: 'Mid', winRate: '64%', games: '14 games', token: 'AH' },
+        { champion: 'Orianna', role: 'Mid', winRate: '57%', games: '7 games', token: 'OR' },
+        { champion: 'Vex', role: 'Mid', winRate: '60%', games: '5 games', token: 'VX' },
+        { champion: 'Syndra', role: 'Mid', winRate: '50%', games: '4 games', token: 'SY' }
+      ]
+    };
+    function tr(key) { return key; }
+    function loadSettings() { try { var raw = localStorage.getItem(SETTINGS_KEY); return raw ? JSON.parse(raw) : null; } catch (e) { return null; } }
+    function saveSettings(settings) { try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch (e) {} }
+    function stopPolling() { if (state.pollTimerId) clearInterval(state.pollTimerId); state.pollTimerId = null; }
+    function startPolling() { stopPolling(); var mins = Number(typeof refreshInterval !== 'undefined' ? refreshInterval : 2); state.pollTimerId = setInterval(fetchAndRender, Math.max(1, mins) * 60000); }
+    function getPreferredQueue() { return typeof preferredQueue !== 'undefined' ? preferredQueue : 'Ranked Solo'; }
+    function escHtml(value) { return String(value == null ? '' : value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+    function initials(a, b) { var src = (a || 'LL').replace(/[^A-Za-z0-9]/g, '').toUpperCase(); if (src.length >= 2) return src.slice(0, 2); return ((src + (b || 'L')).toUpperCase() + 'L').slice(0, 2); }
+    function formatSyncTime() { var now = new Date(); return String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0'); }
+    function showProxyNotice(text) { var el = document.getElementById('proxyNotice'); el.textContent = text || ''; el.classList.toggle('visible', !!text); }
+    function setSetupVisible(visible) { document.getElementById('setupScreen').classList.toggle('visible', !!visible); }
+    function fillSetupForm(settings) { var s = settings || {}; document.getElementById('apiKeyInput').value = s.apiKey || ''; document.getElementById('gameNameInput').value = s.gameName || ''; document.getElementById('tagLineInput').value = s.tagLine || ''; document.getElementById('regionInput').value = (s.region || 'na1').toLowerCase(); document.getElementById('proxyBaseInput').value = s.proxyBaseUrl || ''; }
+    function collectSetupForm() { return { apiKey: document.getElementById('apiKeyInput').value.trim(), gameName: document.getElementById('gameNameInput').value.trim(), tagLine: document.getElementById('tagLineInput').value.trim(), region: document.getElementById('regionInput').value.trim(), proxyBaseUrl: document.getElementById('proxyBaseInput').value.trim() }; }
+    function applyStyles() {
+      var root = document.documentElement;
+      var t = Number(typeof transparency !== 'undefined' ? transparency : 100);
+      root.style.setProperty('--transparency', Number.isFinite(t) ? t / 100 : 1);
+      root.style.setProperty('--text-primary', typeof textColor !== 'undefined' ? textColor : '#f0e6d2');
+      root.style.setProperty('--accent-color', typeof accentColor !== 'undefined' ? accentColor : '#c89b3c');
+      root.style.setProperty('--bg-color', typeof backgroundColor !== 'undefined' ? backgroundColor : '#091428');
+      document.getElementById('livePanel').classList.toggle('is-hidden', typeof showLivePanel !== 'undefined' && showLivePanel === 'Hide');
+      document.getElementById('recentStripPanel').classList.toggle('is-hidden', typeof showRecentStrip !== 'undefined' && showRecentStrip === 'Hide');
+    }
+    function renderHeader(profile) {
+      document.getElementById('crest').textContent = initials(profile.gameName, profile.tagLine);
+      document.getElementById('playerName').textContent = profile.gameName;
+      document.getElementById('playerTag').textContent = '#' + profile.tagLine;
+      document.getElementById('regionLabel').textContent = profile.region;
+      document.getElementById('roleLabel').textContent = profile.role;
+      document.getElementById('winRateLabel').textContent = profile.winRate + '%';
+      document.getElementById('formLabel').textContent = profile.last10;
+      document.getElementById('focusLine').textContent = profile.focus;
+      document.getElementById('rankTier').textContent = profile.rankTier;
+      document.getElementById('rankPoints').textContent = profile.leaguePoints + ' LP';
+      document.getElementById('rankRecord').textContent = profile.wins + 'W ' + profile.losses + 'L';
+      document.getElementById('queueLabel').textContent = profile.queue;
+      document.getElementById('queueFocus').textContent = getPreferredQueue();
+      document.getElementById('avgKda').textContent = profile.avgKda;
+      document.getElementById('lastUpdated').innerHTML = '<strong>' + escHtml(formatSyncTime()) + '</strong> ' + escHtml(tr('Last Sync'));
+      var badge = document.getElementById('statusBadge');
+      var isLive = profile.status === 'live';
+      badge.classList.toggle('live', isLive);
+      document.getElementById('statusText').textContent = isLive ? tr('Live') : tr('Idle');
+    }
+    function renderLiveMatch(live) {
+      var hasLive = !!(live && live.available);
+      document.getElementById('liveContent').style.display = hasLive ? 'block' : 'none';
+      document.getElementById('liveEmpty').style.display = hasLive ? 'none' : 'flex';
+      document.getElementById('statusHeadline').textContent = hasLive ? (live.headline || tr('Live game detected')) : tr('Waiting for live game');
+      document.getElementById('liveSubtitle').textContent = hasLive ? (live.subtitle || '') : tr('No active match from proxy');
+      if (!hasLive) return;
+      document.getElementById('liveGameClock').innerHTML = '<strong>' + escHtml(live.gameTime) + '</strong> ' + escHtml(tr('Game Time'));
+      document.getElementById('matchPhase').textContent = live.phase;
+      document.getElementById('liveQueueName').textContent = live.queueName;
+      document.getElementById('blueKills').textContent = live.blueKills;
+      document.getElementById('redKills').textContent = live.redKills;
+      document.getElementById('dragonsValue').textContent = live.dragons;
+      document.getElementById('towersValue').textContent = live.towers;
+      document.getElementById('goldValue').textContent = live.gold;
+      document.getElementById('featuredRole').textContent = live.role;
+      document.getElementById('featuredChampion').textContent = live.champion;
+      document.getElementById('featuredKda').textContent = live.kda;
+      document.getElementById('featuredCs').textContent = live.cs;
+      document.getElementById('featuredVision').textContent = live.vision;
+      document.getElementById('featuredDamage').textContent = live.damage;
+      document.getElementById('liveImpact').textContent = live.impact;
+      document.getElementById('liveParticipation').textContent = live.participation;
+      document.getElementById('nextObjective').textContent = live.nextObjective;
+      document.getElementById('powerSpike').textContent = live.powerSpike;
+    }
+    function renderRecentMatches(matches) {
+      var wins = 0;
+      document.getElementById('recentMatches').innerHTML = (matches || []).map(function (match) {
+        var win = match.result === 'W';
+        if (win) wins += 1;
+        return '<div class="match-card"><div class="result-icon ' + (win ? 'result-win' : 'result-loss') + '">' + escHtml(match.result) + '</div><div class="match-copy"><div class="match-title">' + escHtml(match.champion) + '  ' + escHtml(match.queue) + '</div><div class="match-subtitle">' + escHtml(match.detail) + '</div></div><div><div class="match-kda">' + escHtml(match.kda) + '</div><div class="match-time">' + escHtml(match.ago) + '</div></div></div>';
+      }).join('');
+      document.getElementById('recentSummary').innerHTML = '<strong>' + wins + 'W ' + ((matches || []).length - wins) + 'L</strong> ' + escHtml(tr('Recent Form'));
+    }
+    function renderChampionPool(pool) {
+      document.getElementById('championPool').innerHTML = (pool || []).map(function (entry) {
+        return '<div class="champion-card"><div class="champ-icon">' + escHtml(entry.token || initials(entry.champion, '')) + '</div><div class="champ-copy"><div class="champ-name">' + escHtml(entry.champion) + '</div><div class="champ-meta">' + escHtml(entry.role) + '</div></div><div><div class="champ-rate">' + escHtml(entry.winRate) + '</div><div class="champ-games">' + escHtml(entry.games) + '</div></div></div>';
+      }).join('');
+      if (pool && pool.length) document.getElementById('poolSummary').innerHTML = '<strong>' + escHtml(pool[0].role) + '</strong> ' + escHtml(tr('Role Bias'));
+    }
+    function renderRecentStrip(matches) {
+      document.getElementById('recentStrip').innerHTML = (matches || []).slice(0, 5).map(function (match) {
+        var win = match.result === 'W';
+        return '<div class="recent-chip"><div class="recent-result" style="color:' + (win ? '#9ef0c4' : '#ffb0b0') + ';">' + escHtml(win ? tr('Win') : tr('Loss')) + '</div><div class="recent-score">' + escHtml(match.champion) + '</div></div>';
+      }).join('');
+    }
+    function renderAll(data) { state.data = data; renderHeader(data.profile); renderLiveMatch(data.liveMatch); renderRecentMatches(data.recentMatches); renderChampionPool(data.championPool); renderRecentStrip(data.recentMatches); }
+    function normalizeProxyData(raw, settings) {
+      if (!raw || !raw.profile) return null;
+      return {
+        profile: { gameName: raw.profile.gameName || settings.gameName, tagLine: raw.profile.tagLine || settings.tagLine, region: String(raw.profile.region || settings.region || '').toUpperCase(), role: raw.profile.role || 'Mid', winRate: raw.profile.winRate || 0, last10: raw.profile.last10 || '0-0', focus: raw.profile.focus || 'Ranked climb', rankTier: raw.profile.rankTier || 'Unranked', leaguePoints: raw.profile.leaguePoints || 0, wins: raw.profile.wins || 0, losses: raw.profile.losses || 0, queue: raw.profile.queue || getPreferredQueue(), avgKda: raw.profile.avgKda || '0.0', status: raw.profile.status || (raw.liveMatch && raw.liveMatch.available ? 'live' : 'idle') },
+        liveMatch: raw.liveMatch || { available: false },
+        recentMatches: Array.isArray(raw.recentMatches) ? raw.recentMatches : [],
+        championPool: Array.isArray(raw.championPool) ? raw.championPool : []
+      };
+    }
+    function getRegionalHost(platform) {
+      return (PLATFORM_TO_REGION[platform.toLowerCase()] || 'americas') + '.api.riotgames.com';
+    }
+    function getPlatformHost(platform) {
+      return platform.toLowerCase() + '.api.riotgames.com';
+    }
+    async function fetchRiotJson(url, apiKey, allow404) {
+      var response = await fetch(url, { headers: { 'X-Riot-Token': apiKey, 'Accept': 'application/json' } });
+      if (allow404 && response.status === 404) return null;
+      if (!response.ok) throw new Error('RIOT_' + response.status);
+      return response.json();
+    }
+    function queueLabelFromId(queueId) {
+      var map = {
+        420: 'Ranked Solo',
+        440: 'Ranked Flex',
+        400: 'Normal Draft',
+        430: 'Normal Blind',
+        450: 'ARAM',
+        700: 'Clash'
+      };
+      return map[queueId] || ('Queue ' + queueId);
+    }
+    function formatAgo(timestamp) {
+      if (!timestamp) return '--';
+      var delta = Math.max(0, Date.now() - timestamp);
+      var mins = Math.floor(delta / 60000);
+      if (mins < 60) return mins + 'm ago';
+      var hrs = Math.floor(mins / 60);
+      if (hrs < 24) return hrs + 'h ago';
+      var days = Math.floor(hrs / 24);
+      return days + 'd ago';
+    }
+    function buildChampionPool(recentMatches) {
+      var poolMap = {};
+      (recentMatches || []).forEach(function (match) {
+        var key = match.champion;
+        if (!poolMap[key]) poolMap[key] = { champion: match.champion, role: 'Recent', winCount: 0, gamesCount: 0 };
+        poolMap[key].gamesCount += 1;
+        if (match.result === 'W') poolMap[key].winCount += 1;
+      });
+      return Object.keys(poolMap).map(function (key) {
+        var row = poolMap[key];
+        var pct = row.gamesCount ? Math.round((row.winCount / row.gamesCount) * 100) : 0;
+        return { champion: row.champion, role: row.role, winRate: pct + '%', games: row.gamesCount + ' games', token: initials(row.champion, '') };
+      }).sort(function (a, b) {
+        return parseInt(b.games, 10) - parseInt(a.games, 10);
+      }).slice(0, 4);
+    }
+    function summarizeRecent(matches) {
+      var wins = 0;
+      (matches || []).forEach(function (match) { if (match.result === 'W') wins += 1; });
+      return { wins: wins, losses: (matches || []).length - wins, last10: wins + '-' + ((matches || []).length - wins), winRate: (matches || []).length ? Math.round((wins / matches.length) * 100) : 0 };
+    }
+    async function fetchDirectRiotData(settings) {
+      var platform = settings.region.toLowerCase();
+      var regionalHost = getRegionalHost(platform);
+      var platformHost = getPlatformHost(platform);
+      var apiKey = settings.apiKey;
+
+      var account = await fetchRiotJson('https://' + regionalHost + '/riot/account/v1/accounts/by-riot-id/' + encodeURIComponent(settings.gameName) + '/' + encodeURIComponent(settings.tagLine), apiKey);
+      var summoner = await fetchRiotJson('https://' + platformHost + '/lol/summoner/v4/summoners/by-puuid/' + encodeURIComponent(account.puuid), apiKey);
+      var leagueEntries = await fetchRiotJson('https://' + platformHost + '/lol/league/v4/entries/by-summoner/' + encodeURIComponent(summoner.id), apiKey);
+      var activeGame = await fetchRiotJson('https://' + platformHost + '/lol/spectator/v5/active-games/by-summoner/' + encodeURIComponent(summoner.id), apiKey, true);
+      var matchIds = await fetchRiotJson('https://' + regionalHost + '/lol/match/v5/matches/by-puuid/' + encodeURIComponent(account.puuid) + '/ids?start=0&count=5', apiKey);
+      var matchDetails = await Promise.all((matchIds || []).map(function (matchId) {
+        return fetchRiotJson('https://' + regionalHost + '/lol/match/v5/matches/' + encodeURIComponent(matchId), apiKey, true);
+      }));
+
+      var playerEntry = null;
+      if (Array.isArray(leagueEntries) && leagueEntries.length) {
+        playerEntry = leagueEntries.find(function (entry) {
+          if (getPreferredQueue() === 'Any') return entry.queueType === 'RANKED_SOLO_5x5' || entry.queueType === 'RANKED_FLEX_SR';
+          if (getPreferredQueue() === 'Ranked Flex') return entry.queueType === 'RANKED_FLEX_SR';
+          return entry.queueType === 'RANKED_SOLO_5x5';
+        }) || leagueEntries[0];
+      }
+
+      var recentMatches = (matchDetails || []).filter(Boolean).map(function (match) {
+        var info = match.info || {};
+        var participant = (info.participants || []).find(function (p) { return p.puuid === account.puuid; }) || {};
+        return {
+          result: participant.win ? 'W' : 'L',
+          queue: queueLabelFromId(info.queueId),
+          champion: participant.championName || 'Unknown',
+          kda: (participant.kills || 0) + ' / ' + (participant.deaths || 0) + ' / ' + (participant.assists || 0),
+          detail: (Math.floor((info.gameDuration || 0) / 60)) + 'm   ' + (participant.totalMinionsKilled || 0) + ' CS',
+          ago: formatAgo(info.gameEndTimestamp)
+        };
+      });
+
+      var recentSummary = summarizeRecent(recentMatches);
+      var liveParticipant = activeGame && (activeGame.participants || []).find(function (p) { return p.puuid === account.puuid; });
+
+      return {
+        profile: {
+          gameName: account.gameName || settings.gameName,
+          tagLine: account.tagLine || settings.tagLine,
+          region: platform.toUpperCase(),
+          role: liveParticipant && liveParticipant.teamPosition ? liveParticipant.teamPosition : 'Recent',
+          winRate: playerEntry ? Math.round((playerEntry.wins / Math.max(1, playerEntry.wins + playerEntry.losses)) * 100) : recentSummary.winRate,
+          last10: recentSummary.last10,
+          focus: playerEntry ? queueLabelFromId(playerEntry.queueType === 'RANKED_FLEX_SR' ? 440 : 420) + ' climb' : 'Recent matches',
+          rankTier: playerEntry ? (playerEntry.tier + ' ' + playerEntry.rank) : 'Unranked',
+          leaguePoints: playerEntry ? playerEntry.leaguePoints : 0,
+          wins: playerEntry ? playerEntry.wins : recentSummary.wins,
+          losses: playerEntry ? playerEntry.losses : recentSummary.losses,
+          queue: playerEntry ? (playerEntry.queueType === 'RANKED_FLEX_SR' ? 'Ranked Flex' : 'Solo/Duo') : getPreferredQueue(),
+          avgKda: recentMatches.length ? ((recentMatches.reduce(function (sum, match) {
+            var parts = match.kda.split('/').map(function (part) { return Number(part.trim()); });
+            return sum + ((parts[0] + parts[2]) / Math.max(1, parts[1]));
+          }, 0) / recentMatches.length).toFixed(1)) : '0.0',
+          status: activeGame ? 'live' : 'idle'
+        },
+        liveMatch: activeGame ? {
+          available: true,
+          headline: 'Live data loaded from Riot API',
+          subtitle: queueLabelFromId(activeGame.gameQueueConfigId),
+          gameTime: Math.floor((Date.now() - activeGame.gameStartTime) / 60000) + 'm',
+          phase: 'In Progress',
+          queueName: queueLabelFromId(activeGame.gameQueueConfigId),
+          blueKills: '--',
+          redKills: '--',
+          dragons: '--',
+          towers: '--',
+          gold: '--',
+          role: liveParticipant && liveParticipant.teamPosition ? liveParticipant.teamPosition : 'Live',
+          champion: liveParticipant && liveParticipant.championName ? liveParticipant.championName : 'Unknown',
+          kda: '-- / -- / --',
+          cs: '--',
+          vision: '--',
+          damage: '--',
+          impact: '--',
+          participation: '--',
+          nextObjective: '--',
+          powerSpike: '--'
+        } : { available: false },
+        recentMatches: recentMatches,
+        championPool: buildChampionPool(recentMatches)
+      };
+    }
+    async function fetchSummary(settings) {
+      if (!settings || !settings.proxyBaseUrl) return null;
+      var base = settings.proxyBaseUrl.replace(/\/+$/, '');
+      var url = base + '/lol/summary?region=' + encodeURIComponent(settings.region) + '&gameName=' + encodeURIComponent(settings.gameName) + '&tagLine=' + encodeURIComponent(settings.tagLine);
+      var response = await fetch(url, { headers: { 'Accept': 'application/json' } });
+      if (!response.ok) throw new Error('PROXY_' + response.status);
+      return response.json();
+    }
+    async function fetchAndRender() {
+      var settings = state.settings || loadSettings();
+      if (!settings || !settings.apiKey || !settings.gameName || !settings.tagLine) {
+        renderAll(MOCK_DATA);
+        showProxyNotice(settings ? tr('Enter a Riot API key and Riot ID, or use mock preview.') : tr('No setup yet. Open Widget Setup to configure Riot ID and optional proxy URL.'));
+        return;
+      }
+      try {
+        var directData = await fetchDirectRiotData(settings);
+        renderAll(directData);
+        showProxyNotice(tr('Using direct Riot API mode with your personal key.'));
+        return;
+      } catch (err) {
+        if (settings.proxyBaseUrl) {
+          try {
+            var proxyData = await fetchSummary(settings);
+            if (proxyData) {
+              var normalized = normalizeProxyData(proxyData, settings);
+              if (normalized) {
+                renderAll(normalized);
+                showProxyNotice('');
+                return;
+              }
+            }
+          } catch (proxyErr) {}
+        }
+        showProxyNotice(tr('Direct Riot API request failed. If this is a browser or CORS issue, add an optional proxy URL.'));
+      }
+      var mockData = JSON.parse(JSON.stringify(MOCK_DATA));
+      mockData.profile.gameName = settings.gameName;
+      mockData.profile.tagLine = settings.tagLine.toUpperCase();
+      mockData.profile.region = settings.region.toUpperCase();
+      renderAll(mockData);
+    }
+    function onSaveSetup() {
+      var settings = collectSetupForm();
+      if (!settings.apiKey || !settings.gameName || !settings.tagLine) {
+        document.getElementById('setupError').classList.add('visible');
+        return;
+      }
+      document.getElementById('setupError').classList.remove('visible');
+      state.settings = settings;
+      saveSettings(settings);
+      setSetupVisible(false);
+      fetchAndRender();
+      startPolling();
+    }
+    function onUseMock() {
+      var current = collectSetupForm();
+      state.settings = { apiKey: current.apiKey || '', gameName: current.gameName || MOCK_DATA.profile.gameName, tagLine: current.tagLine || MOCK_DATA.profile.tagLine, region: current.region || 'na1', proxyBaseUrl: current.proxyBaseUrl || '' };
+      saveSettings(state.settings);
+      document.getElementById('setupError').classList.remove('visible');
+      setSetupVisible(false);
+      showProxyNotice(tr('Using mock preview. Add a proxy base URL when you are ready for live Riot data.'));
+      fetchAndRender();
+      startPolling();
+    }
+    function onIcueDataUpdated() { applyStyles(); if (state.data) renderAll(state.data); }
+    function onIcueInitialized() {
+      applyStyles();
+      state.settings = loadSettings();
+      fillSetupForm(state.settings);
+      fetchAndRender();
+      startPolling();
+    }
+    document.getElementById('saveSetupButton').addEventListener('click', onSaveSetup);
+    document.getElementById('mockSetupButton').addEventListener('click', onUseMock);
+    document.getElementById('openSetupButton').addEventListener('click', function () { fillSetupForm(state.settings || loadSettings()); setSetupVisible(true); });
+    document.getElementById('setupScreen').addEventListener('click', function (e) { if (e.target === this) setSetupVisible(false); });
+    if (typeof window !== 'undefined') window.icueEvents = { 'onDataUpdated': onIcueDataUpdated, 'onICUEInitialized': onIcueInitialized };
+    onIcueInitialized();
+  </script>
+</body>
+</html>
