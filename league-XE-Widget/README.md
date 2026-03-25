@@ -35,6 +35,35 @@ The optional proxy route is:
 
 `GET /lol/summary?region=REGION&gameName=NAME&tagLine=TAG`
 
+## Local testing without hardware
+
+You can test the widget in a normal browser before the Xeneon Edge arrives.
+
+Run:
+
+```powershell
+.\league-XE-Widget\test-locally.ps1
+```
+
+Then open:
+
+`http://localhost:8000/league-XE-Widget/League%20of%20Legends%20for%20XE`
+
+In browser mode, the widget exposes a small `Browser Test Mode` panel that simulates the iCUE properties such as:
+
+- preferred queue
+- refresh interval
+- live panel visibility
+- recent strip visibility
+- text, accent, and background colors
+- transparency
+
+Use `Widget Setup` or `Open Setup` to test:
+
+- mock preview mode
+- direct Riot API mode with your own key
+- optional proxy fallback mode
+
 Example response shape:
 
 ```json

@@ -195,6 +195,55 @@
     .recent-score { font-size: 18px; font-weight: 800; line-height: 1; }
     .notice { display: none; position: absolute; top: 132px; right: 22px; z-index: 4; max-width: 440px; border-radius: 16px; padding: 11px 13px; font-size: 12px; color: var(--text-secondary); }
     .notice.visible { display: block; }
+    .browser-test-panel {
+      display: none;
+      position: absolute;
+      left: 22px;
+      bottom: 22px;
+      z-index: 7;
+      width: 340px;
+      padding: 14px;
+      border-radius: 18px;
+      border: 1px solid var(--border-color);
+      background: linear-gradient(180deg, rgba(255,255,255,0.05), transparent), rgba(6, 16, 28, 0.94);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(12px);
+      color: var(--text-primary);
+    }
+    .browser-test-panel.visible { display: block; }
+    .browser-test-title { font-size: 13px; font-weight: 800; letter-spacing: 0.6px; margin-bottom: 4px; text-transform: uppercase; }
+    .browser-test-copy { font-size: 12px; color: var(--text-secondary); margin-bottom: 12px; line-height: 1.4; }
+    .browser-test-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .browser-test-field { display: flex; flex-direction: column; gap: 6px; }
+    .browser-test-field.full { grid-column: 1 / -1; }
+    .browser-test-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-secondary); }
+    .browser-test-input, .browser-test-select {
+      width: 100%;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.04);
+      color: var(--text-primary);
+      padding: 9px 10px;
+      font-size: 12px;
+      outline: none;
+    }
+    .browser-test-actions { display: flex; gap: 8px; margin-top: 12px; }
+    .browser-test-btn {
+      flex: 1;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.04);
+      color: var(--text-primary);
+      padding: 9px 10px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .browser-test-btn.primary {
+      background: linear-gradient(135deg, rgba(200,155,60,0.9), rgba(160, 120, 32, 0.95));
+      color: #0a1428;
+      border: none;
+    }
     .setup-screen { display: none; position: absolute; inset: 0; z-index: 6; background: rgba(4, 10, 17, 0.78); backdrop-filter: blur(10px); align-items: center; justify-content: center; padding: 26px; }
     .setup-screen.visible { display: flex; }
     .setup-panel { width: min(980px, 100%); border-radius: 24px; padding: 24px; display: grid; grid-template-columns: 1.1fr 1fr; gap: 22px; }
@@ -351,6 +400,58 @@
         </div>
       </div>
     </div>
+    <div id="browserTestPanel" class="browser-test-panel">
+      <div class="browser-test-title">Browser Test Mode</div>
+      <div class="browser-test-copy">Use this panel to simulate iCUE widget properties in a normal browser.</div>
+      <div class="browser-test-grid">
+        <div class="browser-test-field">
+          <div class="browser-test-label">Preferred Queue</div>
+          <select id="testPreferredQueue" class="browser-test-select">
+            <option>Ranked Solo</option>
+            <option>Ranked Flex</option>
+            <option>Any</option>
+          </select>
+        </div>
+        <div class="browser-test-field">
+          <div class="browser-test-label">Refresh Min</div>
+          <input id="testRefreshInterval" class="browser-test-input" type="number" min="1" max="15" value="2" />
+        </div>
+        <div class="browser-test-field">
+          <div class="browser-test-label">Live Panel</div>
+          <select id="testShowLivePanel" class="browser-test-select">
+            <option>Show</option>
+            <option>Hide</option>
+          </select>
+        </div>
+        <div class="browser-test-field">
+          <div class="browser-test-label">Recent Strip</div>
+          <select id="testShowRecentStrip" class="browser-test-select">
+            <option>Show</option>
+            <option>Hide</option>
+          </select>
+        </div>
+        <div class="browser-test-field">
+          <div class="browser-test-label">Text</div>
+          <input id="testTextColor" class="browser-test-input" type="color" value="#f0e6d2" />
+        </div>
+        <div class="browser-test-field">
+          <div class="browser-test-label">Accent</div>
+          <input id="testAccentColor" class="browser-test-input" type="color" value="#c89b3c" />
+        </div>
+        <div class="browser-test-field">
+          <div class="browser-test-label">Background</div>
+          <input id="testBackgroundColor" class="browser-test-input" type="color" value="#091428" />
+        </div>
+        <div class="browser-test-field">
+          <div class="browser-test-label">Transparency</div>
+          <input id="testTransparency" class="browser-test-input" type="range" min="0" max="100" value="100" />
+        </div>
+      </div>
+      <div class="browser-test-actions">
+        <button id="testOpenSetup" class="browser-test-btn primary">Open Setup</button>
+        <button id="testResetTheme" class="browser-test-btn">Reset Theme</button>
+      </div>
+    </div>
   </div>
   <script>
     var SETTINGS_KEY = 'league_xe_widget_settings';
@@ -398,6 +499,47 @@
     function setSetupVisible(visible) { document.getElementById('setupScreen').classList.toggle('visible', !!visible); }
     function fillSetupForm(settings) { var s = settings || {}; document.getElementById('apiKeyInput').value = s.apiKey || ''; document.getElementById('gameNameInput').value = s.gameName || ''; document.getElementById('tagLineInput').value = s.tagLine || ''; document.getElementById('regionInput').value = (s.region || 'na1').toLowerCase(); document.getElementById('proxyBaseInput').value = s.proxyBaseUrl || ''; }
     function collectSetupForm() { return { apiKey: document.getElementById('apiKeyInput').value.trim(), gameName: document.getElementById('gameNameInput').value.trim(), tagLine: document.getElementById('tagLineInput').value.trim(), region: document.getElementById('regionInput').value.trim(), proxyBaseUrl: document.getElementById('proxyBaseInput').value.trim() }; }
+    function isBrowserTestMode() { return typeof iCUE_initialized === 'undefined'; }
+    function applyBrowserTestDefaults() {
+      if (!isBrowserTestMode()) return;
+      window.refreshInterval = Number(document.getElementById('testRefreshInterval').value || 2);
+      window.preferredQueue = document.getElementById('testPreferredQueue').value;
+      window.showLivePanel = document.getElementById('testShowLivePanel').value;
+      window.showRecentStrip = document.getElementById('testShowRecentStrip').value;
+      window.textColor = document.getElementById('testTextColor').value;
+      window.accentColor = document.getElementById('testAccentColor').value;
+      window.backgroundColor = document.getElementById('testBackgroundColor').value;
+      window.transparency = Number(document.getElementById('testTransparency').value || 100);
+    }
+    function bindBrowserTestPanel() {
+      if (!isBrowserTestMode()) return;
+      var panel = document.getElementById('browserTestPanel');
+      panel.classList.add('visible');
+      applyBrowserTestDefaults();
+      ['testRefreshInterval', 'testPreferredQueue', 'testShowLivePanel', 'testShowRecentStrip', 'testTextColor', 'testAccentColor', 'testBackgroundColor', 'testTransparency'].forEach(function (id) {
+        document.getElementById(id).addEventListener('input', function () {
+          applyBrowserTestDefaults();
+          onIcueDataUpdated();
+        });
+        document.getElementById(id).addEventListener('change', function () {
+          applyBrowserTestDefaults();
+          onIcueDataUpdated();
+        });
+      });
+      document.getElementById('testOpenSetup').addEventListener('click', function () { setSetupVisible(true); });
+      document.getElementById('testResetTheme').addEventListener('click', function () {
+        document.getElementById('testRefreshInterval').value = 2;
+        document.getElementById('testPreferredQueue').value = 'Ranked Solo';
+        document.getElementById('testShowLivePanel').value = 'Show';
+        document.getElementById('testShowRecentStrip').value = 'Show';
+        document.getElementById('testTextColor').value = '#f0e6d2';
+        document.getElementById('testAccentColor').value = '#c89b3c';
+        document.getElementById('testBackgroundColor').value = '#091428';
+        document.getElementById('testTransparency').value = 100;
+        applyBrowserTestDefaults();
+        onIcueDataUpdated();
+      });
+    }
     function applyStyles() {
       var root = document.documentElement;
       var t = Number(typeof transparency !== 'undefined' ? transparency : 100);
@@ -694,6 +836,7 @@
     }
     function onIcueDataUpdated() { applyStyles(); if (state.data) renderAll(state.data); }
     function onIcueInitialized() {
+      bindBrowserTestPanel();
       applyStyles();
       state.settings = loadSettings();
       fillSetupForm(state.settings);
