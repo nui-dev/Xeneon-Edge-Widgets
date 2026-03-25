@@ -193,8 +193,6 @@
     .recent-chip { min-width: 74px; padding: 10px 12px; border-radius: 14px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); text-align: center; }
     .recent-result { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; font-weight: 800; }
     .recent-score { font-size: 18px; font-weight: 800; line-height: 1; }
-    .notice { display: none; position: absolute; top: 132px; right: 22px; z-index: 4; max-width: 440px; border-radius: 16px; padding: 11px 13px; font-size: 12px; color: var(--text-secondary); }
-    .notice.visible { display: block; }
     .browser-test-panel {
       display: none;
       position: absolute;
@@ -446,15 +444,36 @@
     }
     .recent-result { font-size: 10px; }
     .recent-score { font-size: 14px; }
-    .notice {
-      top: auto;
-      bottom: 62px;
-      right: 12px;
-      max-width: 320px;
-      border-radius: 12px;
-      padding: 8px 10px;
+    .status-inline {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.04);
+      color: var(--text-secondary);
       font-size: 11px;
-      background: rgba(10, 17, 28, 0.94);
+      font-weight: 700;
+      max-width: 100%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .status-inline.ready {
+      color: #9ef0c4;
+      border-color: rgba(64, 210, 135, 0.22);
+      background: rgba(64, 210, 135, 0.08);
+    }
+    .status-inline.needs-setup {
+      color: #ffe09a;
+      border-color: rgba(247, 198, 95, 0.22);
+      background: rgba(247, 198, 95, 0.08);
+    }
+    .status-inline.error {
+      color: #ffb0b0;
+      border-color: rgba(255, 107, 107, 0.22);
+      background: rgba(255, 107, 107, 0.08);
     }
     .browser-test-panel {
       left: auto;
@@ -498,7 +517,6 @@
 </head>
 <body>
   <div class="widget-root">
-    <div id="proxyNotice" class="notice"></div>
     <section class="topbar">
       <div class="hero-card">
         <div id="crest" class="crest">LL</div>
@@ -534,6 +552,7 @@
         <div class="eyebrow">tr('Session State')</div>
         <div id="statusBadge" class="status-badge"><span class="status-dot"></span><span id="statusText">tr('Idle')</span></div>
         <div id="statusHeadline" class="rank-tier">tr('Waiting for live game')</div>
+        <div id="setupStatePill" class="status-inline needs-setup">Widget setup required</div>
         <div class="status-meta">
           <div class="pill"><strong id="queueFocus">Solo Queue</strong> tr('Focus')</div>
           <div class="pill"><strong id="avgKda">4.1</strong> tr('Avg KDA')</div>
@@ -738,7 +757,12 @@
     function escHtml(value) { return String(value == null ? '' : value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
     function initials(a, b) { var src = (a || 'LL').replace(/[^A-Za-z0-9]/g, '').toUpperCase(); if (src.length >= 2) return src.slice(0, 2); return ((src + (b || 'L')).toUpperCase() + 'L').slice(0, 2); }
     function formatSyncTime() { var now = new Date(); return String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0'); }
-    function showProxyNotice(text) { var el = document.getElementById('proxyNotice'); el.textContent = text || ''; el.classList.toggle('visible', !!text); }
+    function setSetupState(text, kind) {
+      var el = document.getElementById('setupStatePill');
+      el.textContent = text || '';
+      el.classList.remove('ready', 'needs-setup', 'error');
+      el.classList.add(kind || 'needs-setup');
+    }
     function setSetupVisible(visible) { document.getElementById('setupScreen').classList.toggle('visible', !!visible); }
     async function ensureDdragonVersion() {
       if (state.ddragonVersion) return state.ddragonVersion;
@@ -914,9 +938,10 @@
     function getPlatformHost(platform) {
       return platform.toLowerCase() + '.api.riotgames.com';
     }
-    async function fetchRiotJson(url, apiKey, allow404) {
+    async function fetchRiotJson(url, apiKey, allow404, allow403) {
       var response = await fetch(url, { headers: { 'X-Riot-Token': apiKey, 'Accept': 'application/json' } });
       if (allow404 && response.status === 404) return null;
+       if (allow403 && response.status === 403) return null;
       if (!response.ok) throw new Error('RIOT_' + response.status);
       return response.json();
     }
@@ -969,15 +994,16 @@
       var apiKey = settings.apiKey;
 
       var account = await fetchRiotJson('https://' + regionalHost + '/riot/account/v1/accounts/by-riot-id/' + encodeURIComponent(settings.gameName) + '/' + encodeURIComponent(settings.tagLine), apiKey);
-      var summoner = await fetchRiotJson('https://' + platformHost + '/lol/summoner/v4/summoners/by-puuid/' + encodeURIComponent(account.puuid), apiKey);
-      var leagueEntries = await fetchRiotJson('https://' + platformHost + '/lol/league/v4/entries/by-summoner/' + encodeURIComponent(summoner.id), apiKey);
-      var activeGame = await fetchRiotJson('https://' + platformHost + '/lol/spectator/v5/active-games/by-summoner/' + encodeURIComponent(summoner.id), apiKey, true);
+      var summoner = await fetchRiotJson('https://' + platformHost + '/lol/summoner/v4/summoners/by-puuid/' + encodeURIComponent(account.puuid), apiKey, false, true);
+      var leagueEntriesResponse = await fetchRiotJson('https://' + platformHost + '/lol/league/v4/entries/by-puuid/' + encodeURIComponent(account.puuid), apiKey);
+      var activeGame = await fetchRiotJson('https://' + platformHost + '/lol/spectator/v5/active-games/by-puuid/' + encodeURIComponent(account.puuid), apiKey, true, true);
       var matchIds = await fetchRiotJson('https://' + regionalHost + '/lol/match/v5/matches/by-puuid/' + encodeURIComponent(account.puuid) + '/ids?start=0&count=5', apiKey);
       var matchDetails = await Promise.all((matchIds || []).map(function (matchId) {
         return fetchRiotJson('https://' + regionalHost + '/lol/match/v5/matches/' + encodeURIComponent(matchId), apiKey, true);
       }));
 
       var playerEntry = null;
+      var leagueEntries = Array.isArray(leagueEntriesResponse) ? leagueEntriesResponse : (leagueEntriesResponse && leagueEntriesResponse.value ? leagueEntriesResponse.value : []);
       if (Array.isArray(leagueEntries) && leagueEntries.length) {
         playerEntry = leagueEntries.find(function (entry) {
           if (getPreferredQueue() === 'Any') return entry.queueType === 'RANKED_SOLO_5x5' || entry.queueType === 'RANKED_FLEX_SR';
@@ -1001,6 +1027,7 @@
 
       var recentSummary = summarizeRecent(recentMatches);
       var liveParticipant = activeGame && (activeGame.participants || []).find(function (p) { return p.puuid === account.puuid; });
+      var featuredChampion = (activeGame && liveParticipant && liveParticipant.championName) || (recentMatches[0] && recentMatches[0].champion) || 'Jhin';
 
       return {
         profile: {
@@ -1020,7 +1047,9 @@
             var parts = match.kda.split('/').map(function (part) { return Number(part.trim()); });
             return sum + ((parts[0] + parts[2]) / Math.max(1, parts[1]));
           }, 0) / recentMatches.length).toFixed(1)) : '0.0',
-          status: activeGame ? 'live' : 'idle'
+          status: activeGame ? 'live' : 'idle',
+          featuredChampion: featuredChampion,
+          summonerLevel: summoner && summoner.summonerLevel ? summoner.summonerLevel : null
         },
         liveMatch: activeGame ? {
           available: true,
@@ -1062,13 +1091,13 @@
       var settings = state.settings || loadSettings();
       if (!settings || !settings.apiKey || !settings.gameName || !settings.tagLine) {
         renderAll(MOCK_DATA);
-        showProxyNotice(settings ? tr('Enter a Riot API key and Riot ID, or use mock preview.') : tr('No setup yet. Open Widget Setup to configure Riot ID and optional proxy URL.'));
+        setSetupState(settings ? tr('API key or Riot ID missing') : tr('Widget setup required'), 'needs-setup');
         return;
       }
       try {
         var directData = await fetchDirectRiotData(settings);
         renderAll(directData);
-        showProxyNotice(tr('Using direct Riot API mode with your personal key.'));
+        setSetupState(tr('Riot key saved locally'), 'ready');
         return;
       } catch (err) {
         if (settings.proxyBaseUrl) {
@@ -1078,13 +1107,13 @@
               var normalized = normalizeProxyData(proxyData, settings);
               if (normalized) {
                 renderAll(normalized);
-                showProxyNotice('');
+                setSetupState(tr('Proxy fallback active'), 'ready');
                 return;
               }
             }
           } catch (proxyErr) {}
         }
-        showProxyNotice(tr('Direct Riot API request failed. If this is a browser or CORS issue, add an optional proxy URL.'));
+        setSetupState(tr('Key accepted, but Riot request failed'), 'error');
       }
       var mockData = JSON.parse(JSON.stringify(MOCK_DATA));
       mockData.profile.gameName = settings.gameName;
@@ -1111,7 +1140,7 @@
       saveSettings(state.settings);
       document.getElementById('setupError').classList.remove('visible');
       setSetupVisible(false);
-      showProxyNotice(tr('Using mock preview. Add a proxy base URL when you are ready for live Riot data.'));
+      setSetupState(tr('Mock preview mode'), 'needs-setup');
       fetchAndRender();
       startPolling();
     }
