@@ -1,4 +1,7 @@
 Update Mar'28,26 - We'll have lots of news in May regarding new widgets and the documentation for people to build their own widgets not based on iFrame but natively imported into icue. We're currently testing the widget code import and so far so good. If no major bugs then May should have more widgets like Stream Deck native support and more.
+
+<br>
+
 Update Feb'7'26 - We're in the process of building out our documentation that will allow you to convert any iframes to true iCUE widgets or code your own HTML-based widgets for iCUE directly, hence the lack of commits. We're also working on the methods and modes to allow icue to import these widgets in the future.
 
 ![nfl xeneon edge widget](images/1.png)
