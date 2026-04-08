@@ -1,0 +1,16 @@
+{
+  "author": "nui-dev",
+  "id": "com.nuidev.dota2profile",
+  "name": "Dota 2 Profile",
+  "description": "Dota 2 player dashboard for Xeneon Edge with rank, MMR estimate, hero pool, recent matches and last-match detail powered by OpenDota.",
+  "version": "1.0.0",
+  "preview_icon": "resources/icon.svg",
+  "min_framework_version": "1.0.0",
+  "os": [
+    { "platform": "windows" }
+  ],
+  "supported_devices": [
+    { "type": "dashboard_lcd" }
+  ],
+  "interactive": true
+}

@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tr('Dota 2 Profile')</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0 0 64 64'%3E%3Crect%20width='64'%20height='64'%20rx='14'%20fill='%230a0e14'/%3E%3Ctext%20x='32'%20y='42'%20text-anchor='middle'%20font-size='34'%20font-family='Segoe UI,Arial'%20font-weight='700'%20fill='%23cf2622'%3ED%3C/text%3E%3C/svg%3E">
+  <meta name="x-icue-restrictions" data-restrictions='[{"device":"dashboard_lcd"}]'>
+  <meta name="x-icue-interactive">
+  <meta name="x-icue-property" content="refreshInterval" data-label="tr('Refresh (min)')" data-type="slider" data-default="2" data-min="1" data-max="15" data-step="1">
+  <meta name="x-icue-property" content="gameMode" data-label="tr('Game Mode')" data-type="tab-buttons" data-values="['All Pick','Ranked','Turbo']" data-default="'Ranked'">
+  <meta name="x-icue-property" content="showLivePanel" data-label="tr('Last Match Panel')" data-type="tab-buttons" data-values="['Show','Hide']" data-default="'Show'">
+  <meta name="x-icue-property" content="showRecentStrip" data-label="tr('Recent Strip')" data-type="tab-buttons" data-values="['Show','Hide']" data-default="'Show'">
+  <meta name="x-icue-property" content="textColor" data-label="tr('Text Color')" data-type="color" data-default="'#e6dcc6'">
+  <meta name="x-icue-property" content="accentColor" data-label="tr('Accent Color')" data-type="color" data-default="'#cf2622'">
+  <meta name="x-icue-property" content="backgroundColor" data-label="tr('Background')" data-type="color" data-default="'#0a0e14'">
+  <meta name="x-icue-property" content="transparency" data-label="tr('Transparency')" data-type="slider" data-default="100" data-min="0" data-max="100" data-step="1">
+  <script id="x-icue-groups" type="application/json">
+  [
+    { "title": "tr('Dota 2 Profile')", "properties": ["refreshInterval", "gameMode", "showLivePanel", "showRecentStrip"] },
+    { "title": "tr('Widget Personalization')", "properties": ["textColor", "accentColor", "backgroundColor", "transparency"] }
+  ]
+  </script>
+  <style>
+    :root {
+      --bg-color: #0a0e14;
+      --panel-bg: rgba(8, 14, 22, 0.82);
+      --panel-soft: rgba(20, 26, 36, 0.76);
+      --text-primary: #e6dcc6;
+      --text-secondary: #8a8275;
+      --accent-color: #cf2622;
+      --border-color: rgba(207, 38, 34, 0.22);
+      --shadow: 0 18px 50px rgba(0, 0, 0, 0.4);
+      --transparency: 1;
+    }
+    * { box-sizing: border-box; }
+    html, body { width: 100vw; height: 100vh; overflow: hidden; }
+    body {
+      margin: 0;
+      background:
+        radial-gradient(circle at top left, rgba(207, 38, 34, 0.18), transparent 26%),
+        radial-gradient(circle at bottom right, rgba(70, 18, 14, 0.3), transparent 32%),
+        linear-gradient(135deg, #05080c 0%, var(--bg-color) 54%, #120707 100%);
+      color: var(--text-primary);
+      font-family: Georgia, 'Times New Roman', serif;
+      letter-spacing: 0.01em;
+      opacity: var(--transparency);
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: manipulation;
+    }
+    .widget-root {
+      width: 100%; height: 100%;
+      position: relative;
+      display: flex; flex-direction: column;
+      padding: 10px 12px 8px; gap: 8px;
+      overflow: hidden;
+    }
+    .widget-root::before, .widget-root::after {
+      content: ''; position: absolute; inset: 0; pointer-events: none;
+    }
+    .widget-root::before {
+      background:
+        linear-gradient(90deg, rgba(207, 38, 34, 0.05) 0, rgba(207, 38, 34, 0.05) 1px, transparent 1px, transparent 80px),
+        linear-gradient(180deg, rgba(207, 38, 34, 0.04) 0, rgba(207, 38, 34, 0.04) 1px, transparent 1px, transparent 80px);
+      opacity: 0.25;
+    }
+    .widget-root::after {
+      background: linear-gradient(180deg, rgba(255,255,255,0.04), transparent 30%, rgba(0,0,0,0.18));
+      z-index: 0;
+    }
+    .widget-root > * { position: relative; z-index: 1; }
+    .topbar {
+      display: grid;
+      grid-template-columns: 1.6fr 0.95fr 0.72fr;
+      gap: 8px; align-items: stretch; min-height: 88px;
+    }
+    .hero-card, .rank-card, .status-card, .panel, .footer-strip, .setup-panel, .notice {
+      border: 1px solid var(--border-color);
+      background: linear-gradient(180deg, rgba(255,255,255,0.04), transparent), var(--panel-bg);
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.22);
+      backdrop-filter: blur(12px);
+      border-radius: 14px;
+    }
+    .hero-card {
+      padding: 12px 14px;
+      display: grid;
+      grid-template-columns: 72px 1fr auto;
+      gap: 16px; align-items: center;
+      min-height: 88px; position: relative; overflow: hidden;
+    }
+    .hero-card::before {
+      content: ''; position: absolute; inset: 0;
+      background-image: var(--hero-art, none);
+      background-position: right center; background-size: cover;
+      opacity: 0.18; pointer-events: none;
+    }
+    .hero-card::after {
+      content: ''; position: absolute; inset: 0;
+      background: linear-gradient(90deg, rgba(8,14,22,0.96) 0%, rgba(8,14,22,0.9) 46%, rgba(8,14,22,0.58) 100%);
+      pointer-events: none;
+    }
+    .hero-card > * { position: relative; z-index: 1; }
+    .crest {
+      width: 72px; height: 72px; border-radius: 14px;
+      background-image: var(--profile-icon, linear-gradient(135deg, rgba(207, 38, 34, 0.4), rgba(30, 10, 10, 0.55)));
+      background-size: cover; background-position: center;
+      border: 1px solid rgba(255,255,255,0.08);
+      font-size: 0;
+    }
+    .crest::after {
+      content: attr(data-token);
+      display: flex; width: 100%; height: 100%;
+      align-items: flex-end; justify-content: flex-start;
+      padding: 8px; font-size: 18px; font-weight: 800;
+      color: #f4e8cb;
+      background: linear-gradient(180deg, transparent, rgba(0,0,0,0.55));
+      border-radius: 14px; box-sizing: border-box;
+    }
+    .hero-copy, .match-copy, .champ-copy {
+      min-width: 0; display: flex; flex-direction: column; gap: 6px;
+    }
+    .eyebrow, .panel-subtitle, .objective-label, .kpi-label, .setup-label {
+      font-size: 9px; text-transform: uppercase; letter-spacing: 1.4px;
+      color: var(--text-secondary);
+    }
+    .player-line, .meta-row, .hero-stats, .status-meta, .recent-strip {
+      display: flex; gap: 10px; flex-wrap: wrap;
+    }
+    .player-name { font-size: 24px; font-weight: 800; line-height: 1; }
+    .tagline { font-size: 14px; color: var(--text-secondary); font-weight: 700; }
+    .pill {
+      padding: 5px 9px; border-radius: 999px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.06);
+      font-size: 11px; color: var(--text-secondary); font-weight: 700;
+    }
+    .pill strong { color: var(--text-primary); font-size: 12px; }
+    .hero-side {
+      display: flex; flex-direction: column; align-items: flex-end;
+      justify-content: center; gap: 6px; min-width: 160px;
+    }
+    .rank-card, .status-card, .panel {
+      padding: 12px; display: flex; flex-direction: column; gap: 8px; min-width: 0; min-height: 0;
+    }
+    .rank-tier { font-size: 18px; font-weight: 800; letter-spacing: 0.5px; }
+    .rank-points { font-size: 28px; line-height: 1; font-weight: 900; color: var(--accent-color); }
+    .status-card { min-width: 0; max-width: none; }
+    .status-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      width: fit-content; padding: 6px 10px; border-radius: 999px;
+      background: rgba(207, 38, 34, 0.12);
+      border: 1px solid rgba(207, 38, 34, 0.22);
+      color: #ffb8b5; font-size: 11px; font-weight: 800;
+      text-transform: uppercase; letter-spacing: 1px;
+    }
+    .status-badge.live {
+      background: rgba(64, 210, 135, 0.12);
+      border-color: rgba(64, 210, 135, 0.22);
+      color: #9ef0c4;
+    }
+    .status-dot { width: 8px; height: 8px; border-radius: 999px; background: currentColor; }
+    .content-grid {
+      flex: 1; display: grid;
+      grid-template-columns: 1.24fr 1fr 0.88fr;
+      gap: 8px; min-height: 0;
+    }
+    .panel-header {
+      display: flex; align-items: baseline; justify-content: space-between;
+      gap: 12px; margin-bottom: 8px;
+    }
+    .panel-title { font-size: 15px; font-weight: 800; letter-spacing: 0.4px; }
+    .live-panel {
+      background: radial-gradient(circle at top right, rgba(207, 38, 34, 0.18), transparent 30%),
+        linear-gradient(180deg, rgba(255,255,255,0.04), transparent), var(--panel-bg);
+    }
+    .live-main {
+      display: grid; grid-template-columns: 1.12fr 0.88fr;
+      gap: 8px; margin-bottom: 8px;
+    }
+    .live-scorecard {
+      display: flex; flex-direction: column; justify-content: space-between;
+      gap: 12px; padding: 12px; min-height: 156px; border-radius: 12px;
+      background:
+        linear-gradient(135deg, rgba(40, 10, 10, 0.82), rgba(8, 14, 22, 0.92)),
+        var(--live-art, none);
+      background-size: cover; background-position: center;
+      background-blend-mode: screen, normal;
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+    .match-phase {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 12px; font-size: 11px; color: var(--text-secondary);
+      text-transform: uppercase; letter-spacing: 1px;
+    }
+    .score-line { display: flex; align-items: center; gap: 12px; font-size: 56px; line-height: 0.9; font-weight: 900; }
+    .score-divider { font-size: 24px; color: rgba(255,255,255,0.35); padding-top: 10px; }
+    .team-blue { color: #61c8ff; }
+    .team-red { color: #ff7a7a; }
+    .live-objectives, .kpi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+    .objective, .kpi {
+      padding: 9px 10px; border-radius: 10px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.05);
+    }
+    .objective-value, .kpi-value { font-size: 18px; font-weight: 800; }
+    .featured-champion {
+      padding: 10px; border-radius: 12px;
+      background:
+        linear-gradient(180deg, rgba(207, 38, 34, 0.12), rgba(7, 10, 16, 0.55)),
+        rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.06);
+      display: flex; flex-direction: column; gap: 12px; justify-content: space-between;
+    }
+    .champ-splash {
+      min-height: 116px; border-radius: 12px; padding: 12px;
+      background-image: var(--featured-art, linear-gradient(135deg, rgba(207,38,34,0.3), rgba(25, 10, 10, 0.65)));
+      background-size: cover; background-position: center;
+      display: flex; align-items: flex-end; font-size: 22px; font-weight: 800;
+      position: relative; overflow: hidden;
+    }
+    .champ-splash::before {
+      content: ''; position: absolute; inset: 0;
+      background: linear-gradient(180deg, transparent 0%, rgba(7,10,16,0.12) 38%, rgba(7,10,16,0.86) 100%);
+    }
+    .champ-splash > span, .champ-splash { position: relative; z-index: 1; }
+    .match-list, .champion-list {
+      display: flex; flex-direction: column; gap: 8px;
+      overflow: hidden; min-height: 0;
+    }
+    .match-card, .champion-card {
+      display: grid; align-items: center; gap: 10px;
+      padding: 8px 10px; border-radius: 12px; min-height: 58px;
+      border: 1px solid rgba(255,255,255,0.05);
+      background: rgba(255,255,255,0.03);
+      grid-template-columns: auto 1fr auto;
+    }
+    .result-icon, .champ-icon {
+      width: 50px; height: 50px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0; font-weight: 900;
+      border: 1px solid rgba(255,255,255,0.08);
+      background-size: cover; background-position: center;
+      overflow: hidden; position: relative;
+    }
+    .result-icon::after, .champ-icon::after {
+      content: attr(data-token);
+      position: absolute; inset: auto 0 0 0; padding: 4px 5px;
+      font-size: 11px; font-weight: 800; color: #f3e7c7;
+      background: linear-gradient(180deg, transparent, rgba(0,0,0,0.72));
+      text-align: center;
+    }
+    .result-win { box-shadow: inset 0 0 0 2px rgba(64, 210, 135, 0.55); }
+    .result-loss { box-shadow: inset 0 0 0 2px rgba(255, 107, 107, 0.5); }
+    .match-title, .champ-name { font-size: 13px; font-weight: 800; }
+    .match-subtitle, .champ-meta, .match-time, .champ-games { font-size: 11px; color: var(--text-secondary); }
+    .match-kda, .champ-rate { font-size: 16px; font-weight: 800; text-align: right; }
+    .footer-strip {
+      border-radius: 14px; padding: 8px 10px;
+      display: grid; grid-template-columns: auto 1fr auto auto;
+      align-items: center; gap: 12px; min-height: 56px;
+    }
+    .recent-strip { gap: 6px; }
+    .recent-chip {
+      min-width: 64px; padding: 7px 9px; border-radius: 10px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.06);
+      text-align: center;
+    }
+    .recent-result { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; font-weight: 800; }
+    .recent-score { font-size: 14px; font-weight: 800; line-height: 1; }
+    .status-inline {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 6px 10px; border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.04);
+      color: var(--text-secondary); font-size: 11px; font-weight: 700;
+      max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .status-inline.ready { color: #9ef0c4; border-color: rgba(64,210,135,0.22); background: rgba(64,210,135,0.08); }
+    .status-inline.needs-setup { color: #ffe09a; border-color: rgba(247,198,95,0.22); background: rgba(247,198,95,0.08); }
+    .status-inline.error { color: #ffb0b0; border-color: rgba(255,107,107,0.22); background: rgba(255,107,107,0.08); }
+    .browser-test-panel {
+      display: none; position: absolute;
+      right: 12px; bottom: 62px; z-index: 7;
+      width: 300px; padding: 12px; border-radius: 14px;
+      border: 1px solid var(--border-color);
+      background: linear-gradient(180deg, rgba(255,255,255,0.05), transparent), rgba(8, 14, 22, 0.94);
+      box-shadow: var(--shadow); backdrop-filter: blur(12px); color: var(--text-primary);
+    }
+    .browser-test-panel.visible.expanded { display: block; }
+    .browser-test-title { font-size: 13px; font-weight: 800; letter-spacing: 0.6px; margin-bottom: 4px; text-transform: uppercase; }
+    .browser-test-copy { font-size: 12px; color: var(--text-secondary); margin-bottom: 12px; line-height: 1.4; }
+    .browser-test-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .browser-test-field { display: flex; flex-direction: column; gap: 6px; }
+    .browser-test-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-secondary); }
+    .browser-test-input, .browser-test-select {
+      width: 100%; border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.04); color: var(--text-primary);
+      padding: 9px 10px; font-size: 12px; outline: none;
+    }
+    .browser-test-actions { display: flex; gap: 8px; margin-top: 10px; }
+    .browser-test-btn {
+      flex: 1; border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.04); color: var(--text-primary);
+      padding: 9px 10px; font-size: 12px; font-weight: 700; cursor: pointer;
+    }
+    .browser-test-btn.primary {
+      background: linear-gradient(135deg, rgba(207,38,34,0.9), rgba(150, 20, 16, 0.95));
+      color: #f4e8cb; border: none;
+    }
+    .browser-toggle {
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.04);
+      color: var(--text-primary);
+      padding: 8px 10px; font-size: 11px; font-weight: 700; cursor: pointer;
+    }
+    .legal-line {
+      font-size: 10px; color: rgba(220, 228, 240, 0.68);
+      line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .setup-screen {
+      display: none; position: absolute; inset: 0; z-index: 6;
+      background: rgba(4, 6, 10, 0.82); backdrop-filter: blur(10px);
+      align-items: center; justify-content: center; padding: 26px;
+    }
+    .setup-screen.visible { display: flex; }
+    .setup-panel {
+      width: min(980px, 100%); border-radius: 20px; padding: 24px;
+      display: grid; grid-template-columns: 1.1fr 1fr; gap: 22px;
+    }
+    .setup-copy h2 { margin: 0 0 12px; font-size: 28px; line-height: 1.1; }
+    .setup-copy p { margin: 0 0 12px; color: var(--text-secondary); line-height: 1.55; font-size: 14px; }
+    .setup-list { display: flex; flex-direction: column; gap: 10px; margin-top: 14px; }
+    .setup-list-item {
+      padding: 12px 14px; border-radius: 12px;
+      background: rgba(255,255,255,0.035);
+      border: 1px solid rgba(255,255,255,0.05);
+      color: var(--text-secondary); font-size: 13px;
+    }
+    .setup-form { display: flex; flex-direction: column; gap: 12px; }
+    .setup-input, .setup-select, .setup-button {
+      width: 100%; border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.04); color: var(--text-primary);
+      padding: 13px 14px; font-size: 14px; outline: none;
+    }
+    .setup-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .setup-button {
+      cursor: pointer; font-weight: 800;
+      background: linear-gradient(135deg, rgba(207,38,34,0.9), rgba(150,20,16,0.95));
+      color: #f4e8cb; border: none; margin-top: 8px;
+    }
+    .ghost-button { background: transparent; color: var(--text-primary); border: 1px solid rgba(255,255,255,0.08); }
+    .setup-error { display: none; color: #ffb0b0; font-size: 12px; }
+    .setup-error.visible { display: block; }
+    .empty-state {
+      flex: 1; display: none; align-items: center; justify-content: center;
+      text-align: center; color: var(--text-secondary); padding: 24px;
+      border-radius: 14px; border: 1px dashed rgba(255,255,255,0.1);
+      background: rgba(255,255,255,0.02);
+    }
+    .is-hidden { display: none !important; }
+    @media (max-width: 1300px) {
+      .content-grid, .topbar, .setup-panel { grid-template-columns: 1fr; }
+      .footer-strip { grid-template-columns: 1fr; }
+      .browser-test-panel { width: calc(100vw - 24px); right: 12px; left: 12px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="widget-root">
+    <section class="topbar">
+      <div class="hero-card">
+        <div id="crest" class="crest">DO</div>
+        <div class="hero-copy">
+          <div class="eyebrow">tr('Profile Snapshot')</div>
+          <div class="player-line">
+            <div id="playerName" class="player-name">Phantom</div>
+            <div id="playerTag" class="tagline">#123456789</div>
+          </div>
+          <div class="meta-row">
+            <div class="pill"><strong id="regionLabel">US EAST</strong> tr('Region')</div>
+            <div class="pill"><strong id="gamesLabel">8421</strong> tr('Total Games')</div>
+            <div class="pill"><strong id="winRateLabel">54%</strong> tr('Win Rate')</div>
+            <div class="pill"><strong id="lastPlayedLabel">2h ago</strong> tr('Last Played')</div>
+          </div>
+        </div>
+        <div class="hero-side">
+          <div class="eyebrow">tr('MMR Estimate')</div>
+          <div id="focusLine" class="rank-tier">~4820 MMR</div>
+          <div id="lastUpdated" class="pill"><strong>--</strong> tr('Last Sync')</div>
+        </div>
+      </div>
+      <div class="rank-card">
+        <div class="eyebrow">tr('Ranked Overview')</div>
+        <div id="rankTier" class="rank-tier">Ancient 5</div>
+        <div id="rankPoints" class="rank-points">4820 MMR</div>
+        <div class="hero-stats">
+          <div class="pill"><strong id="rankRecord">2104W 1832L</strong> tr('Record')</div>
+          <div class="pill"><strong id="queueLabel">Ranked</strong> tr('Mode')</div>
+        </div>
+      </div>
+      <div class="status-card">
+        <div class="eyebrow">tr('Session State')</div>
+        <div id="statusBadge" class="status-badge"><span class="status-dot"></span><span id="statusText">tr('Idle')</span></div>
+        <div id="statusHeadline" class="rank-tier">tr('Waiting for next match')</div>
+        <div id="setupStatePill" class="status-inline needs-setup">Widget setup required</div>
+        <div class="status-meta">
+          <div class="pill"><strong id="queueFocus">Ranked</strong> tr('Focus')</div>
+          <div class="pill"><strong id="avgKda">3.4</strong> tr('Avg KDA')</div>
+        </div>
+      </div>
+    </section>
+    <section class="content-grid">
+      <section id="livePanel" class="panel live-panel">
+        <div class="panel-header">
+          <div><div class="panel-title">tr('Last Match Detail')</div><div id="liveSubtitle" class="panel-subtitle">tr('Most recent match from OpenDota')</div></div>
+          <div id="liveGameClock" class="pill"><strong>42:18</strong> tr('Duration')</div>
+        </div>
+        <div id="liveContent">
+          <div class="live-main">
+            <div class="live-scorecard">
+              <div class="match-phase"><span id="matchPhase">tr('Victory')</span><span id="liveQueueName">Ranked / All Pick</span></div>
+              <div class="score-line"><span id="blueKills" class="team-blue">32</span><span class="score-divider">:</span><span id="redKills" class="team-red">21</span></div>
+              <div class="live-objectives">
+                <div class="objective"><div class="objective-label">tr('GPM')</div><div id="dragonsValue" class="objective-value">612</div></div>
+                <div class="objective"><div class="objective-label">tr('XPM')</div><div id="towersValue" class="objective-value">698</div></div>
+                <div class="objective"><div class="objective-label">tr('LH/D')</div><div id="goldValue" class="objective-value">284/12</div></div>
+              </div>
+            </div>
+            <aside class="featured-champion">
+              <div>
+                <div class="eyebrow" id="featuredRole">Carry / Mid</div>
+                <div class="champ-splash" id="featuredChampion">Phantom Assassin</div>
+              </div>
+              <div class="kpi-grid">
+                <div class="kpi"><div class="kpi-label">tr('KDA')</div><div id="featuredKda" class="kpi-value">14 / 3 / 9</div></div>
+                <div class="kpi"><div class="kpi-label">tr('Hero Damage')</div><div id="featuredCs" class="kpi-value">38k</div></div>
+                <div class="kpi"><div class="kpi-label">tr('Net Worth')</div><div id="featuredVision" class="kpi-value">28.4k</div></div>
+                <div class="kpi"><div class="kpi-label">tr('Lobby')</div><div id="featuredDamage" class="kpi-value">Ranked</div></div>
+              </div>
+            </aside>
+          </div>
+          <div class="panel-subtitle" style="margin-bottom:8px;">tr('Match Performance')</div>
+          <div class="kpi-grid">
+            <div class="kpi"><div class="kpi-label">tr('Tower Damage')</div><div id="liveImpact" class="kpi-value">6.2k</div></div>
+            <div class="kpi"><div class="kpi-label">tr('Hero Healing')</div><div id="liveParticipation" class="kpi-value">0</div></div>
+            <div class="kpi"><div class="kpi-label">tr('Duration')</div><div id="nextObjective" class="kpi-value">42:18</div></div>
+            <div class="kpi"><div class="kpi-label">tr('Result')</div><div id="powerSpike" class="kpi-value">Victory</div></div>
+          </div>
+        </div>
+        <div id="liveEmpty" class="empty-state">tr('No recent match data yet. Configure your Dota account ID or use the mock preview.')</div>
+      </section>
+      <section class="panel">
+        <div class="panel-header">
+          <div><div class="panel-title">tr('Recent Matches')</div><div class="panel-subtitle">tr('Last five results')</div></div>
+          <div id="recentSummary" class="pill"><strong>3W 2L</strong> tr('Recent Form')</div>
+        </div>
+        <div id="recentMatches" class="match-list"></div>
+      </section>
+      <section class="panel">
+        <div class="panel-header">
+          <div><div class="panel-title">tr('Hero Pool')</div><div class="panel-subtitle">tr('Most played heroes')</div></div>
+          <div id="poolSummary" class="pill"><strong>Carry</strong> tr('Role Bias')</div>
+        </div>
+        <div id="championPool" class="champion-list"></div>
+      </section>
+    </section>
+    <section id="recentStripPanel" class="footer-strip">
+      <div class="eyebrow">tr('Momentum Strip')</div>
+      <div id="recentStrip" class="recent-strip" style="flex:1;min-width:0;"></div>
+      <div id="legalLine" class="legal-line">Dota 2 art assets are used under Valve policy. Not affiliated with Valve.</div>
+      <button id="toggleBrowserTest" class="browser-toggle">Browser Tools</button>
+      <button id="openSetupButton" class="setup-input ghost-button" style="width:auto;min-width:170px;">tr('Widget Setup')</button>
+    </section>
+    <div id="setupScreen" class="setup-screen">
+      <div class="setup-panel">
+        <div class="setup-copy">
+          <div class="eyebrow">tr('Dota 2 Profile for XE')</div>
+          <h2>tr('Plug in your Dota 2 account ID to pull live stats from OpenDota.')</h2>
+          <p>tr('OpenDota is a free public Dota 2 API. No API key is required for basic profile requests. Only your 32-bit Dota account ID is stored in local widget storage.')</p>
+          <p>tr('Use the steamID3 number after the colon (it should be 8-10 digits).')</p>
+          <div class="setup-list">
+            <div class="setup-list-item">tr('Find your account ID at steamid.io by pasting your profile URL.')</div>
+            <div class="setup-list-item">tr('Use the steamID3 number after the colon (it should be 8-10 digits).')</div>
+            <div class="setup-list-item">tr('Mock preview is available if you just want to try the layout.')</div>
+          </div>
+        </div>
+        <div class="setup-form">
+          <div><div class="setup-label">tr('Dota Account ID')</div><input id="accountIdInput" class="setup-input" type="text" placeholder="123456789" /></div>
+          <div class="setup-list-item" style="font-size:12px;">tr('Look up your account ID at https://steamid.io')</div>
+          <div class="setup-row">
+            <button id="saveSetupButton" class="setup-button">tr('Save And Load')</button>
+            <button id="mockSetupButton" class="setup-input ghost-button">tr('Use Mock Preview')</button>
+          </div>
+          <div id="setupError" class="setup-error">tr('Enter a valid numeric Dota account ID, or use mock preview.')</div>
+        </div>
+      </div>
+    </div>
+    <div id="browserTestPanel" class="browser-test-panel">
+      <div class="browser-test-title">Browser Test Mode</div>
+      <div class="browser-test-copy">Use this panel to simulate iCUE widget properties in a normal browser.</div>
+      <div class="browser-test-grid">
+        <div class="browser-test-field">
+          <div class="browser-test-label">Game Mode</div>
+          <select id="testGameMode" class="browser-test-select">
+            <option>All Pick</option>
+            <option>Ranked</option>
+            <option>Turbo</option>
+          </select>
+        </div>
+        <div class="browser-test-field">
+          <div class="browser-test-label">Refresh Min</div>
+          <input id="testRefreshInterval" class="browser-test-input" type="number" min="1" max="15" value="2" />
+        </div>
+        <div class="browser-test-field">
+          <div class="browser-test-label">Last Match Panel</div>
+          <select id="testShowLivePanel" class="browser-test-select">
+            <option>Show</option>
+            <option>Hide</option>
+          </select>
+        </div>
+        <div class="browser-test-field">
+          <div class="browser-test-label">Recent Strip</div>
+          <select id="testShowRecentStrip" class="browser-test-select">
+            <option>Show</option>
+            <option>Hide</option>
+          </select>
+        </div>
+        <div class="browser-test-field">
+          <div class="browser-test-label">Text</div>
+          <input id="testTextColor" class="browser-test-input" type="color" value="#e6dcc6" />
+        </div>
+        <div class="browser-test-field">
+          <div class="browser-test-label">Accent</div>
+          <input id="testAccentColor" class="browser-test-input" type="color" value="#cf2622" />
+        </div>
+        <div class="browser-test-field">
+          <div class="browser-test-label">Background</div>
+          <input id="testBackgroundColor" class="browser-test-input" type="color" value="#0a0e14" />
+        </div>
+        <div class="browser-test-field">
+          <div class="browser-test-label">Transparency</div>
+          <input id="testTransparency" class="browser-test-input" type="range" min="0" max="100" value="100" />
+        </div>
+      </div>
+      <div class="browser-test-actions">
+        <button id="testOpenSetup" class="browser-test-btn primary">Open Setup</button>
+        <button id="testResetTheme" class="browser-test-btn">Reset Theme</button>
+      </div>
+    </div>
+  </div>
+  <script>
+    var SETTINGS_KEY = 'dota2_xe_widget_settings';
+    var OPENDOTA_BASE = 'https://api.opendota.com/api';
+    var RANK_MEDALS = { 1: 'Herald', 2: 'Guardian', 3: 'Crusader', 4: 'Archon', 5: 'Legend', 6: 'Ancient', 7: 'Divine', 8: 'Immortal' };
+    var LOBBY_TYPES = { 0: 'Normal', 1: 'Practice', 2: 'Tournament', 4: 'Co-op Bot', 5: 'Team Ranked', 6: 'Solo Ranked', 7: 'Ranked', 8: '1v1 Mid', 9: 'Battle Cup' };
+    var state = { settings: null, data: null, pollTimerId: null, heroMap: null };
+    var MOCK_DATA = {
+      profile: { personaName: 'Phantom', accountId: '123456789', region: 'US EAST', totalGames: 8421, winRate: 54, lastPlayed: '2h ago', mmr: 4820, rankTier: 'Ancient 5', wins: 2104, losses: 1832, mode: 'Ranked', avgKda: '3.4', status: 'idle', featuredHero: 'Phantom Assassin' },
+      liveMatch: { available: true, headline: 'Recent ranked victory', subtitle: 'Mock preview using OpenDota schema', duration: '42:18', phase: 'Victory', lobbyType: 'Ranked / All Pick', allyScore: 32, enemyScore: 21, gpm: '612', xpm: '698', lhDeaths: '284/12', role: 'Carry / Mid', hero: 'Phantom Assassin', kda: '14 / 3 / 9', heroDamage: '38k', netWorth: '28.4k', lobby: 'Ranked', towerDamage: '6.2k', healing: '0', durationLong: '42:18', result: 'Victory' },
+      recentMatches: [
+        { result: 'W', mode: 'Ranked', hero: 'Phantom Assassin', heroSlug: 'phantom_assassin', kda: '14 / 3 / 9', detail: '42:18   GPM 612', ago: '2h ago' },
+        { result: 'W', mode: 'Ranked', hero: 'Invoker', heroSlug: 'invoker', kda: '18 / 5 / 12', detail: '38:04   GPM 578', ago: '5h ago' },
+        { result: 'L', mode: 'Turbo', hero: 'Anti-Mage', heroSlug: 'antimage', kda: '7 / 9 / 6', detail: '24:51   GPM 601', ago: '1d ago' },
+        { result: 'W', mode: 'Ranked', hero: 'Pudge', heroSlug: 'pudge', kda: '9 / 4 / 21', detail: '45:12   GPM 412', ago: '2d ago' },
+        { result: 'L', mode: 'Ranked', hero: 'Phantom Assassin', heroSlug: 'phantom_assassin', kda: '6 / 8 / 4', detail: '36:40   GPM 488', ago: '2d ago' }
+      ],
+      heroPool: [
+        { hero: 'Phantom Assassin', heroSlug: 'phantom_assassin', role: 'Carry', winRate: '62%', games: '48 games', token: 'PA' },
+        { hero: 'Invoker', heroSlug: 'invoker', role: 'Mid', winRate: '58%', games: '33 games', token: 'IN' },
+        { hero: 'Anti-Mage', heroSlug: 'antimage', role: 'Carry', winRate: '54%', games: '28 games', token: 'AM' },
+        { hero: 'Pudge', heroSlug: 'pudge', role: 'Support', winRate: '51%', games: '22 games', token: 'PU' }
+      ]
+    };
+    function tr(key) { return key; }
+    function stripTrTokens(value) {
+      return String(value == null ? '' : value).replace(/tr\('([^']+)'\)/g, '$1');
+    }
+    function localizeStaticTextNodes() {
+      document.title = stripTrTokens(document.title);
+      var walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null);
+      var node;
+      while ((node = walker.nextNode())) {
+        var next = stripTrTokens(node.nodeValue);
+        if (next !== node.nodeValue) node.nodeValue = next;
+      }
+    }
+    function loadSettings() { try { var raw = localStorage.getItem(SETTINGS_KEY); return raw ? JSON.parse(raw) : null; } catch (e) { return null; } }
+    function saveSettings(settings) { try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch (e) {} }
+    function stopPolling() { if (state.pollTimerId) clearInterval(state.pollTimerId); state.pollTimerId = null; }
+    function startPolling() { stopPolling(); var mins = Number(typeof refreshInterval !== 'undefined' ? refreshInterval : 2); state.pollTimerId = setInterval(fetchAndRender, Math.max(1, mins) * 60000); }
+    function getGameMode() { return typeof gameMode !== 'undefined' ? gameMode : 'Ranked'; }
+    function escHtml(value) { return String(value == null ? '' : value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+    function initials(a, b) { var src = (a || 'DO').replace(/[^A-Za-z0-9]/g, '').toUpperCase(); if (src.length >= 2) return src.slice(0, 2); return ((src + (b || 'D')).toUpperCase() + 'D').slice(0, 2); }
+    function formatSyncTime() { var now = new Date(); return String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0'); }
+    function setSetupState(text, kind) {
+      var el = document.getElementById('setupStatePill');
+      el.textContent = text || '';
+      el.classList.remove('ready', 'needs-setup', 'error');
+      el.classList.add(kind || 'needs-setup');
+    }
+    function setSetupVisible(visible) { document.getElementById('setupScreen').classList.toggle('visible', !!visible); }
+    function heroSlugFromName(name) {
+      if (!name) return 'antimage';
+      return String(name).toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+    }
+    function heroPortraitUrl(slug) {
+      return 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/' + encodeURIComponent(slug || 'antimage') + '.png';
+    }
+    function dotaRankLabel(tier, leaderboard) {
+      if (!tier) return 'Unranked';
+      var medal = Math.floor(tier / 10);
+      var star = tier % 10;
+      var name = RANK_MEDALS[medal] || 'Unranked';
+      if (medal === 8) {
+        if (leaderboard) return 'Immortal #' + leaderboard;
+        return 'Immortal';
+      }
+      return name + ' ' + (star || 1);
+    }
+    function formatAgo(epochSec) {
+      if (!epochSec) return '--';
+      var delta = Math.max(0, Date.now() / 1000 - epochSec);
+      var mins = Math.floor(delta / 60);
+      if (mins < 60) return mins + 'm ago';
+      var hrs = Math.floor(mins / 60);
+      if (hrs < 24) return hrs + 'h ago';
+      var days = Math.floor(hrs / 24);
+      return days + 'd ago';
+    }
+    function formatDuration(seconds) {
+      if (!seconds) return '--';
+      var m = Math.floor(seconds / 60);
+      var s = seconds % 60;
+      return m + ':' + String(s).padStart(2, '0');
+    }
+    function fillSetupForm(settings) { var s = settings || {}; document.getElementById('accountIdInput').value = s.accountId || ''; }
+    function collectSetupForm() { return { accountId: document.getElementById('accountIdInput').value.trim() }; }
+    function isBrowserTestMode() { return typeof iCUE_initialized === 'undefined'; }
+    function applyBrowserTestDefaults() {
+      if (!isBrowserTestMode()) return;
+      window.refreshInterval = Number(document.getElementById('testRefreshInterval').value || 2);
+      window.gameMode = document.getElementById('testGameMode').value;
+      window.showLivePanel = document.getElementById('testShowLivePanel').value;
+      window.showRecentStrip = document.getElementById('testShowRecentStrip').value;
+      window.textColor = document.getElementById('testTextColor').value;
+      window.accentColor = document.getElementById('testAccentColor').value;
+      window.backgroundColor = document.getElementById('testBackgroundColor').value;
+      window.transparency = Number(document.getElementById('testTransparency').value || 100);
+    }
+    function bindBrowserTestPanel() {
+      if (!isBrowserTestMode()) return;
+      var panel = document.getElementById('browserTestPanel');
+      applyBrowserTestDefaults();
+      ['testRefreshInterval', 'testGameMode', 'testShowLivePanel', 'testShowRecentStrip', 'testTextColor', 'testAccentColor', 'testBackgroundColor', 'testTransparency'].forEach(function (id) {
+        document.getElementById(id).addEventListener('input', function () { applyBrowserTestDefaults(); onIcueDataUpdated(); });
+        document.getElementById(id).addEventListener('change', function () { applyBrowserTestDefaults(); onIcueDataUpdated(); });
+      });
+      document.getElementById('testOpenSetup').addEventListener('click', function () { setSetupVisible(true); });
+      document.getElementById('toggleBrowserTest').addEventListener('click', function () {
+        panel.classList.toggle('visible');
+        panel.classList.toggle('expanded');
+      });
+      document.getElementById('testResetTheme').addEventListener('click', function () {
+        document.getElementById('testRefreshInterval').value = 2;
+        document.getElementById('testGameMode').value = 'Ranked';
+        document.getElementById('testShowLivePanel').value = 'Show';
+        document.getElementById('testShowRecentStrip').value = 'Show';
+        document.getElementById('testTextColor').value = '#e6dcc6';
+        document.getElementById('testAccentColor').value = '#cf2622';
+        document.getElementById('testBackgroundColor').value = '#0a0e14';
+        document.getElementById('testTransparency').value = 100;
+        applyBrowserTestDefaults();
+        onIcueDataUpdated();
+      });
+    }
+    function applyStyles() {
+      var root = document.documentElement;
+      var t = Number(typeof transparency !== 'undefined' ? transparency : 100);
+      root.style.setProperty('--transparency', Number.isFinite(t) ? t / 100 : 1);
+      root.style.setProperty('--text-primary', typeof textColor !== 'undefined' ? textColor : '#e6dcc6');
+      root.style.setProperty('--accent-color', typeof accentColor !== 'undefined' ? accentColor : '#cf2622');
+      root.style.setProperty('--bg-color', typeof backgroundColor !== 'undefined' ? backgroundColor : '#0a0e14');
+      document.getElementById('livePanel').classList.toggle('is-hidden', typeof showLivePanel !== 'undefined' && showLivePanel === 'Hide');
+      document.getElementById('recentStripPanel').classList.toggle('is-hidden', typeof showRecentStrip !== 'undefined' && showRecentStrip === 'Hide');
+    }
+    function renderHeader(profile) {
+      var featuredSlug = heroSlugFromName(profile.featuredHero || (state.data && state.data.liveMatch && state.data.liveMatch.hero) || 'Phantom Assassin');
+      document.getElementById('crest').textContent = initials(profile.personaName, '');
+      document.getElementById('crest').setAttribute('data-token', initials(profile.personaName, ''));
+      document.getElementById('crest').style.setProperty('--profile-icon', 'url("' + heroPortraitUrl(featuredSlug) + '")');
+      document.querySelector('.widget-root').style.setProperty('--hero-art', 'url("' + heroPortraitUrl(featuredSlug) + '")');
+      document.getElementById('playerName').textContent = profile.personaName;
+      document.getElementById('playerTag').textContent = '#' + profile.accountId;
+      document.getElementById('regionLabel').textContent = profile.region;
+      document.getElementById('gamesLabel').textContent = profile.totalGames;
+      document.getElementById('winRateLabel').textContent = profile.winRate + '%';
+      document.getElementById('lastPlayedLabel').textContent = profile.lastPlayed;
+      document.getElementById('focusLine').textContent = '~' + profile.mmr + ' MMR';
+      document.getElementById('rankTier').textContent = profile.rankTier;
+      document.getElementById('rankPoints').textContent = profile.mmr + ' MMR';
+      document.getElementById('rankRecord').textContent = profile.wins + 'W ' + profile.losses + 'L';
+      document.getElementById('queueLabel').textContent = profile.mode;
+      document.getElementById('queueFocus').textContent = getGameMode();
+      document.getElementById('avgKda').textContent = profile.avgKda;
+      document.getElementById('lastUpdated').innerHTML = '<strong>' + escHtml(formatSyncTime()) + '</strong> ' + escHtml(tr('Last Sync'));
+      document.getElementById('legalLine').textContent = 'Dota 2 art assets from Valve CDN. Not affiliated with Valve.';
+      var badge = document.getElementById('statusBadge');
+      var isLive = profile.status === 'live';
+      badge.classList.toggle('live', isLive);
+      document.getElementById('statusText').textContent = isLive ? tr('Live') : tr('Idle');
+    }
+    function renderLastMatch(live) {
+      var hasLive = !!(live && live.available);
+      document.getElementById('liveContent').style.display = hasLive ? 'block' : 'none';
+      document.getElementById('liveEmpty').style.display = hasLive ? 'none' : 'flex';
+      document.getElementById('statusHeadline').textContent = hasLive ? (live.headline || tr('Last match loaded')) : tr('Waiting for next match');
+      document.getElementById('liveSubtitle').textContent = hasLive ? (live.subtitle || '') : tr('No recent match data');
+      if (!hasLive) return;
+      document.getElementById('liveGameClock').innerHTML = '<strong>' + escHtml(live.duration) + '</strong> ' + escHtml(tr('Duration'));
+      document.getElementById('matchPhase').textContent = live.phase;
+      document.getElementById('liveQueueName').textContent = live.lobbyType;
+      document.getElementById('blueKills').textContent = live.allyScore;
+      document.getElementById('redKills').textContent = live.enemyScore;
+      document.getElementById('dragonsValue').textContent = live.gpm;
+      document.getElementById('towersValue').textContent = live.xpm;
+      document.getElementById('goldValue').textContent = live.lhDeaths;
+      document.getElementById('featuredRole').textContent = live.role;
+      document.getElementById('featuredChampion').textContent = live.hero;
+      var slug = heroSlugFromName(live.hero || 'antimage');
+      document.querySelector('.champ-splash').style.setProperty('--featured-art', 'url("' + heroPortraitUrl(slug) + '")');
+      document.querySelector('.live-scorecard').style.setProperty('--live-art', 'url("' + heroPortraitUrl(slug) + '")');
+      document.getElementById('featuredKda').textContent = live.kda;
+      document.getElementById('featuredCs').textContent = live.heroDamage;
+      document.getElementById('featuredVision').textContent = live.netWorth;
+      document.getElementById('featuredDamage').textContent = live.lobby;
+      document.getElementById('liveImpact').textContent = live.towerDamage;
+      document.getElementById('liveParticipation').textContent = live.healing;
+      document.getElementById('nextObjective').textContent = live.durationLong;
+      document.getElementById('powerSpike').textContent = live.result;
+    }
+    function renderRecentMatches(matches) {
+      var wins = 0;
+      document.getElementById('recentMatches').innerHTML = (matches || []).map(function (match) {
+        var win = match.result === 'W';
+        var token = initials(match.hero, '');
+        if (win) wins += 1;
+        var slug = match.heroSlug || heroSlugFromName(match.hero);
+        return '<div class="match-card"><div class="result-icon ' + (win ? 'result-win' : 'result-loss') + '" data-token="' + escHtml(token) + '" style="background-image:url(\'' + escHtml(heroPortraitUrl(slug)) + '\');"></div><div class="match-copy"><div class="match-title">' + escHtml(match.hero) + '  ' + escHtml(match.mode) + '</div><div class="match-subtitle">' + escHtml(match.detail) + '</div></div><div><div class="match-kda">' + escHtml(match.kda) + '</div><div class="match-time">' + escHtml(match.ago) + '</div></div></div>';
+      }).join('');
+      document.getElementById('recentSummary').innerHTML = '<strong>' + wins + 'W ' + ((matches || []).length - wins) + 'L</strong> ' + escHtml(tr('Recent Form'));
+    }
+    function renderHeroPool(pool) {
+      document.getElementById('championPool').innerHTML = (pool || []).map(function (entry) {
+        var token = entry.token || initials(entry.hero, '');
+        var slug = entry.heroSlug || heroSlugFromName(entry.hero);
+        return '<div class="champion-card"><div class="champ-icon" data-token="' + escHtml(token) + '" style="background-image:url(\'' + escHtml(heroPortraitUrl(slug)) + '\');"></div><div class="champ-copy"><div class="champ-name">' + escHtml(entry.hero) + '</div><div class="champ-meta">' + escHtml(entry.role) + '</div></div><div><div class="champ-rate">' + escHtml(entry.winRate) + '</div><div class="champ-games">' + escHtml(entry.games) + '</div></div></div>';
+      }).join('');
+      if (pool && pool.length) document.getElementById('poolSummary').innerHTML = '<strong>' + escHtml(pool[0].role) + '</strong> ' + escHtml(tr('Role Bias'));
+    }
+    function renderRecentStrip(matches) {
+      document.getElementById('recentStrip').innerHTML = (matches || []).slice(0, 5).map(function (match) {
+        var win = match.result === 'W';
+        return '<div class="recent-chip"><div class="recent-result" style="color:' + (win ? '#9ef0c4' : '#ffb0b0') + ';">' + escHtml(win ? tr('Win') : tr('Loss')) + '</div><div class="recent-score">' + escHtml(match.hero) + '</div></div>';
+      }).join('');
+    }
+    function renderAll(data) {
+      state.data = data;
+      renderHeader(data.profile);
+      renderLastMatch(data.liveMatch);
+      renderRecentMatches(data.recentMatches);
+      renderHeroPool(data.heroPool);
+      renderRecentStrip(data.recentMatches);
+    }
+    async function openDotaJson(path) {
+      var response = await fetch(OPENDOTA_BASE + path, { headers: { 'Accept': 'application/json' } });
+      if (!response.ok) throw new Error('OPENDOTA_' + response.status);
+      return response.json();
+    }
+    async function fetchHeroes() {
+      if (state.heroMap) return state.heroMap;
+      try {
+        var heroes = await openDotaJson('/heroes');
+        var map = {};
+        (heroes || []).forEach(function (h) {
+          var slug = String(h.name || '').replace(/^npc_dota_hero_/, '');
+          map[h.id] = { name: h.localized_name || h.name, slug: slug };
+        });
+        state.heroMap = map;
+        return map;
+      } catch (e) {
+        state.heroMap = {};
+        return state.heroMap;
+      }
+    }
+    function fetchPlayerProfile(accountId) { return openDotaJson('/players/' + encodeURIComponent(accountId)); }
+    function fetchWinLoss(accountId) { return openDotaJson('/players/' + encodeURIComponent(accountId) + '/wl'); }
+    function fetchRecentMatches(accountId) { return openDotaJson('/players/' + encodeURIComponent(accountId) + '/recentMatches'); }
+    function fetchHeroPool(accountId) { return openDotaJson('/players/' + encodeURIComponent(accountId) + '/heroes'); }
+    async function fetchDirectOpenDotaData(settings) {
+      await fetchHeroes();
+      var heroMap = state.heroMap || {};
+      var profileRaw;
+      try { profileRaw = await fetchPlayerProfile(settings.accountId); } catch (e) { throw e; }
+      var wlRaw;
+      try { wlRaw = await fetchWinLoss(settings.accountId); } catch (e) { wlRaw = { win: 0, lose: 0 }; }
+      var recentRaw;
+      try { recentRaw = await fetchRecentMatches(settings.accountId); } catch (e) { recentRaw = []; }
+      var heroRaw;
+      try { heroRaw = await fetchHeroPool(settings.accountId); } catch (e) { heroRaw = []; }
+
+      var personaName = (profileRaw && profileRaw.profile && profileRaw.profile.personaname) || 'Player';
+      var totalGames = (wlRaw.win || 0) + (wlRaw.lose || 0);
+      var winRate = totalGames ? Math.round((wlRaw.win / totalGames) * 100) : 0;
+      var rankTier = dotaRankLabel(profileRaw && profileRaw.rank_tier, profileRaw && profileRaw.leaderboard_rank);
+      var mmrEstimate = (profileRaw && profileRaw.mmr_estimate && profileRaw.mmr_estimate.estimate) || 0;
+
+      var recentMatches = (recentRaw || []).slice(0, 5).map(function (m) {
+        var info = heroMap[m.hero_id] || { name: 'Hero ' + m.hero_id, slug: 'antimage' };
+        var playerWon = ((m.player_slot < 128) === (m.radiant_win));
+        return {
+          result: playerWon ? 'W' : 'L',
+          mode: LOBBY_TYPES[m.lobby_type] || 'Match',
+          hero: info.name,
+          heroSlug: info.slug,
+          kda: (m.kills || 0) + ' / ' + (m.deaths || 0) + ' / ' + (m.assists || 0),
+          detail: formatDuration(m.duration) + '   GPM ' + (m.gold_per_min || 0),
+          ago: formatAgo(m.start_time)
+        };
+      });
+
+      var heroPool = (heroRaw || []).slice(0, 4).map(function (h) {
+        var info = heroMap[h.hero_id] || { name: 'Hero ' + h.hero_id, slug: 'antimage' };
+        var pct = h.games ? Math.round((h.win / h.games) * 100) : 0;
+        return {
+          hero: info.name,
+          heroSlug: info.slug,
+          role: 'Recent',
+          winRate: pct + '%',
+          games: h.games + ' games',
+          token: initials(info.name, '')
+        };
+      });
+
+      var firstRecent = recentMatches[0];
+      var firstRaw = (recentRaw || [])[0];
+      var featuredHero = firstRecent ? firstRecent.hero : 'Phantom Assassin';
+      var firstHeroInfo = firstRaw ? (heroMap[firstRaw.hero_id] || { name: featuredHero, slug: 'antimage' }) : { name: featuredHero, slug: 'phantom_assassin' };
+
+      var lastPlayedAgo = firstRaw ? formatAgo(firstRaw.start_time) : '--';
+      var lastMatch = firstRaw ? {
+        available: true,
+        headline: firstRecent.result === 'W' ? 'Recent victory' : 'Recent loss',
+        subtitle: 'Loaded from OpenDota',
+        duration: formatDuration(firstRaw.duration),
+        phase: firstRecent.result === 'W' ? 'Victory' : 'Defeat',
+        lobbyType: (LOBBY_TYPES[firstRaw.lobby_type] || 'Match'),
+        allyScore: firstRecent.result === 'W' ? '--' : '--',
+        enemyScore: '--',
+        gpm: String(firstRaw.gold_per_min || 0),
+        xpm: String(firstRaw.xp_per_min || 0),
+        lhDeaths: (firstRaw.last_hits || 0) + '/' + (firstRaw.deaths || 0),
+        role: 'Match',
+        hero: firstHeroInfo.name,
+        kda: (firstRaw.kills || 0) + ' / ' + (firstRaw.deaths || 0) + ' / ' + (firstRaw.assists || 0),
+        heroDamage: Math.round((firstRaw.hero_damage || 0) / 1000) + 'k',
+        netWorth: '--',
+        lobby: LOBBY_TYPES[firstRaw.lobby_type] || 'Match',
+        towerDamage: Math.round((firstRaw.tower_damage || 0) / 1000) + 'k',
+        healing: String(firstRaw.hero_healing || 0),
+        durationLong: formatDuration(firstRaw.duration),
+        result: firstRecent.result === 'W' ? 'Victory' : 'Defeat'
+      } : { available: false };
+
+      var avgKda = '0.0';
+      if (recentMatches.length) {
+        var sum = recentMatches.reduce(function (s, m) {
+          var parts = m.kda.split('/').map(function (p) { return Number(p.trim()); });
+          return s + ((parts[0] + parts[2]) / Math.max(1, parts[1]));
+        }, 0);
+        avgKda = (sum / recentMatches.length).toFixed(1);
+      }
+
+      return {
+        profile: {
+          personaName: personaName,
+          accountId: settings.accountId,
+          region: 'Global',
+          totalGames: totalGames,
+          winRate: winRate,
+          lastPlayed: lastPlayedAgo,
+          mmr: mmrEstimate || 0,
+          rankTier: rankTier,
+          wins: wlRaw.win || 0,
+          losses: wlRaw.lose || 0,
+          mode: getGameMode(),
+          avgKda: avgKda,
+          status: 'idle',
+          featuredHero: featuredHero
+        },
+        liveMatch: lastMatch,
+        recentMatches: recentMatches,
+        heroPool: heroPool
+      };
+    }
+    async function fetchAndRender() {
+      var settings = state.settings || loadSettings();
+      if (!settings || !settings.accountId) {
+        renderAll(MOCK_DATA);
+        setSetupState(tr('Widget setup required'), 'needs-setup');
+        return;
+      }
+      try {
+        var data = await fetchDirectOpenDotaData(settings);
+        renderAll(data);
+        setSetupState(tr('OpenDota connected'), 'ready');
+        return;
+      } catch (err) {
+        setSetupState(tr('OpenDota request failed. Showing mock preview.'), 'error');
+      }
+      var mockData = JSON.parse(JSON.stringify(MOCK_DATA));
+      mockData.profile.accountId = settings.accountId;
+      renderAll(mockData);
+    }
+    function onSaveSetup() {
+      var settings = collectSetupForm();
+      if (!settings.accountId || !/^\d+$/.test(settings.accountId)) {
+        document.getElementById('setupError').classList.add('visible');
+        return;
+      }
+      document.getElementById('setupError').classList.remove('visible');
+      state.settings = settings;
+      saveSettings(settings);
+      setSetupVisible(false);
+      fetchAndRender();
+      startPolling();
+    }
+    function onUseMock() {
+      var current = collectSetupForm();
+      state.settings = { accountId: current.accountId || MOCK_DATA.profile.accountId };
+      saveSettings(state.settings);
+      document.getElementById('setupError').classList.remove('visible');
+      setSetupVisible(false);
+      setSetupState(tr('Mock preview mode'), 'needs-setup');
+      fetchAndRender();
+      startPolling();
+    }
+    function onIcueDataUpdated() { applyStyles(); if (state.data) renderAll(state.data); }
+    function onIcueInitialized() {
+      localizeStaticTextNodes();
+      bindBrowserTestPanel();
+      applyStyles();
+      state.settings = loadSettings();
+      fillSetupForm(state.settings);
+      fetchAndRender();
+      startPolling();
+    }
+    document.getElementById('saveSetupButton').addEventListener('click', onSaveSetup);
+    document.getElementById('mockSetupButton').addEventListener('click', onUseMock);
+    document.getElementById('openSetupButton').addEventListener('click', function () { fillSetupForm(state.settings || loadSettings()); setSetupVisible(true); });
+    document.getElementById('setupScreen').addEventListener('click', function (e) { if (e.target === this) setSetupVisible(false); });
+    if (typeof window !== 'undefined') window.icueEvents = { 'onDataUpdated': onIcueDataUpdated, 'onICUEInitialized': onIcueInitialized };
+    onIcueInitialized();
+  </script>
+</body>
+</html>
