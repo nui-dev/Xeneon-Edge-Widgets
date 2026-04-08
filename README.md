@@ -1,3 +1,44 @@
-# Xeneon Edge Widgets
+Update Mar'28,26 - We'll have lots of news in May regarding new widgets and the documentation for people to build their own widgets not based on iFrame but natively imported into icue. We're currently testing the widget code import and so far so good. If no major bugs then May should have more widgets like Stream Deck native support and more.
 
-This is a public dump of my widget contributions to Xeneon Edge.
+<br>
+
+Update Feb'7'26 - We're in the process of building out our documentation that will allow you to convert any iframes to true iCUE widgets or code your own HTML-based widgets for iCUE directly, hence the lack of commits. We're also working on the methods and modes to allow icue to import these widgets in the future.
+
+![nfl xeneon edge widget](images/1.png)
+
+![epl plus xeneon edge widget](images/2.png)
+
+![CS2 Xeneon Edge Widget](images/3.1.png)
+
+![CS2 Xeneon Edge Widget](images/4.png)
+
+![CS2 Xeneon Edge Widget](images/5.png)
+
+![CS2 Xeneon Edge Widget](images/6.png)
+
+
+-----------------------------------------------------------------------
+
+I'm shocksim, one of the creators of the Xeneon Edge LCD display at CORSAIR. I was bored one day and decided to make some example iframe widgets and share them. They're (obviously) free. These are formatted iframe widgets that you can copy and paste into the "code" form in the IFRAME widget in iCUE. These then use HTML/JS/CSS to draw a webpage and dynamically pull whatever data from a web api somewhere. 
+
+If there are no public APIs, there'll be a note in the code to tell you how to go sign up for an account to get your own free api key. These APIs are usually free for personal use but costs money to call APIs at scale so they require an account. 
+
+Feel free to take the code, fork it, play around with modifying it and using the widgets. Happy Holidays!
+
+-------------------
+
+<ins>API & Widget Notes</ins>
+
+For CS2: Sign up for a Pandascore account for their free API and you could create widgets for other games they service. You have to edit your API into the code.
+
+For Lunch Roulette: Sign up for a free Google Cloud account to tap into 'Places & Places (New) API's enabled, as well as the 'Maps Javascript API'. These will take at least 1-2mins to propogate once you've enabled them. You have to edit your API into the code.
+
+For Live Commute Timer: You need a Google Cloud API key that has the 'Distance Matrix API' enabled. This one has a setup form so you don't have to edit the code.
+
+Live Flight viewer requires a FlightAware API key if you want to see origin/destination.
+
+The rest of them shouldn't require any extra API keys.
+
+Some of these have storage files but Xeneon Edge's browser currently doesn't support saving cookies/sessions over power cycling, so the team is working to enable that capability, which should make a lot of these even more powerful. 
+
+
