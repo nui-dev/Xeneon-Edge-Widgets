@@ -140,7 +140,7 @@
       justify-content: center; gap: 6px; min-width: 160px;
     }
     .rank-card, .status-card, .panel {
-      padding: 12px; display: flex; flex-direction: column; gap: 8px; min-width: 0; min-height: 0;
+      padding: 12px; display: flex; flex-direction: column; gap: 8px; min-width: 0; min-height: 0; overflow: hidden;
     }
     .rank-tier { font-size: 18px; font-weight: 800; letter-spacing: 0.5px; }
     .rank-points { font-size: 28px; line-height: 1; font-weight: 900; color: var(--accent-color); }
@@ -179,7 +179,7 @@
     }
     .live-scorecard {
       display: flex; flex-direction: column; justify-content: space-between;
-      gap: 12px; padding: 12px; min-height: 156px; border-radius: 12px;
+      gap: 8px; padding: 10px; min-height: 0; border-radius: 12px;
       background: linear-gradient(135deg, rgba(40, 10, 10, 0.92), rgba(8, 14, 22, 0.96));
       border: 1px solid rgba(255,255,255,0.06);
     }
@@ -188,7 +188,7 @@
       gap: 12px; font-size: 11px; color: var(--text-secondary);
       text-transform: uppercase; letter-spacing: 1px;
     }
-    .score-line { display: flex; align-items: center; gap: 12px; font-size: 56px; line-height: 0.9; font-weight: 900; }
+    .score-line { display: flex; align-items: center; gap: 12px; font-size: 40px; line-height: 0.9; font-weight: 900; }
     .score-divider { font-size: 24px; color: rgba(255,255,255,0.35); padding-top: 10px; }
     .team-blue { color: #61c8ff; }
     .team-red { color: #ff7a7a; }
@@ -442,7 +442,7 @@
             </aside>
           </div>
           <div class="panel-subtitle" style="margin-bottom:8px;">tr('Match Performance')</div>
-          <div class="kpi-grid">
+          <div class="kpi-grid" style="grid-template-columns:repeat(4,1fr);">
             <div class="kpi"><div class="kpi-label">tr('Tower Damage')</div><div id="liveImpact" class="kpi-value">6.2k</div></div>
             <div class="kpi"><div class="kpi-label">tr('Hero Healing')</div><div id="liveParticipation" class="kpi-value">0</div></div>
             <div class="kpi"><div class="kpi-label">tr('Duration')</div><div id="nextObjective" class="kpi-value">42:18</div></div>
